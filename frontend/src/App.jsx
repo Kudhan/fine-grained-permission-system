@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import Dashboard from './pages/Dashboard';
 import EmployeeListPage from './pages/EmployeeListPage';
 import EmployeeFormPage from './pages/EmployeeFormPage';
@@ -13,10 +14,10 @@ import Navbar from './components/layout/Navbar';
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
     if (loading) return (
-        <div className="flex h-screen items-center justify-center bg-brand-bg">
+        <div className="flex h-screen items-center justify-center bg-shubakar-softBg">
             <div className="flex flex-col items-center gap-4">
-                <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-brand-header animate-pulse font-medium">Initializing Dashboard...</p>
+                <div className="w-12 h-12 border-4 border-shubakar-primary border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-shubakar-text animate-pulse font-black uppercase tracking-widest text-xs italic">Syncing Protocols...</p>
             </div>
         </div>
     );
@@ -26,9 +27,9 @@ const ProtectedRoute = ({ children }) => {
 
 const Layout = ({ children }) => {
     return (
-        <div className="min-h-screen bg-brand-bg flex flex-col">
+        <div className="min-h-screen bg-shubakar-bg flex flex-col">
             <Navbar />
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
+            <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-12">
                 {children}
             </main>
         </div>
@@ -39,6 +40,7 @@ const App = () => {
     return (
         <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
             <Route
                 path="/*"
                 element={

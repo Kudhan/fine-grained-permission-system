@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, Loader2, Box, Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Sparkles, Mail, Lock, Loader2, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -11,7 +11,6 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
 
     const { login } = useAuth();
-    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -26,96 +25,104 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-brand-bg flex items-center justify-center p-6 relative overflow-hidden">
-            {/* SaaS Pattern Overlay */}
-            <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#003333 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+        <div className="min-h-screen bg-hero-gradient flex items-center justify-center p-6 relative overflow-hidden">
+            {/* Visual background elements */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-shubakar-secondary/5 rounded-full blur-[100px] -mr-48 -mt-48"></div>
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-shubakar-primary/5 rounded-full blur-[100px] -ml-48 -mb-48"></div>
 
-            <div className="max-w-md w-full animate-in zoom-in duration-500 relative z-10">
-                <div className="bg-white rounded-[2rem] shadow-premium border border-brand-border p-10 relative overflow-hidden">
-                    {/* Decorative element */}
-                    <div className="absolute -top-12 -right-12 w-40 h-40 bg-brand-accent/5 rounded-full blur-2xl"></div>
-                    <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-brand-header/5 rounded-full blur-2xl"></div>
+            <div className="max-w-md w-full animate-in zoom-in duration-700 relative z-10">
+                <div className="glass-card p-10 md:p-12">
+                    <div className="flex flex-col items-center mb-10 text-center">
+                        <div className="bg-shubakar-primary p-4 rounded-[1.5rem] shadow-vibrant mb-6 ring-8 ring-shubakar-primary/10">
+                            <Sparkles className="text-white" size={32} />
+                        </div>
+                        <h2 className="text-4xl font-black text-shubakar-text tracking-tighter italic">SHUBAKAR</h2>
+                        <p className="text-shubakar-muted font-bold text-sm uppercase tracking-widest mt-2">Administrative Gateway</p>
+                    </div>
 
-                    <div className="relative z-10">
-                        <div className="flex flex-col items-center mb-10">
-                            <div className="bg-brand-header p-4 rounded-2xl shadow-lg mb-4 ring-4 ring-brand-header/10">
-                                <Box className="text-brand-accent" size={32} />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {error && (
+                            <div className="bg-red-50 border-2 border-red-100 p-4 rounded-2xl text-red-600 text-xs font-bold animate-in slide-in-from-top-2">
+                                {error}
                             </div>
-                            <h2 className="text-3xl font-extrabold text-brand-header tracking-tight">Dashee</h2>
-                            <p className="text-slate-400 font-medium mt-1">Sign in to your admin portal</p>
+                        )}
+
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-shubakar-muted uppercase tracking-[0.2em] ml-2">Email Address</label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-shubakar-muted group-focus-within:text-shubakar-primary transition-colors">
+                                    <Mail size={18} />
+                                </div>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="block w-full pl-12 pr-4 py-4 bg-shubakar-softBg/50 border-2 border-transparent rounded-2xl focus:border-shubakar-primary/20 focus:bg-white outline-none transition-all font-bold text-shubakar-text placeholder:text-shubakar-muted/40"
+                                    placeholder="admin@shubakar.com"
+                                    required
+                                />
+                            </div>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {error && (
-                                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg text-red-700 text-sm font-medium animate-in slide-in-from-top-2 duration-300">
-                                    {error}
+                        <div className="space-y-1.5">
+                            <div className="flex items-center justify-between mx-2">
+                                <label className="text-[10px] font-black text-shubakar-muted uppercase tracking-[0.2em]">Password</label>
+                                <button type="button" className="text-[10px] font-black text-shubakar-secondary uppercase tracking-widest hover:text-shubakar-primary transition-colors">Recover</button>
+                            </div>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-shubakar-muted group-focus-within:text-shubakar-primary transition-colors">
+                                    <Lock size={18} />
                                 </div>
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="block w-full pl-12 pr-12 py-4 bg-shubakar-softBg/50 border-2 border-transparent rounded-2xl focus:border-shubakar-primary/20 focus:bg-white outline-none transition-all font-bold text-shubakar-text placeholder:text-shubakar-muted/40"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-shubakar-muted hover:text-shubakar-primary transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full btn-vibrant py-4 text-base tracking-tight flex items-center justify-center gap-2 group"
+                        >
+                            {loading ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                                <>
+                                    Connect to Dashboard
+                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                </>
                             )}
+                        </button>
+                    </form>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-accent transition-colors">
-                                        <Mail size={18} />
-                                    </div>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-brand-border rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent focus:bg-white outline-none transition-all font-medium text-slate-700 shadow-sm"
-                                        placeholder="admin@saas.com"
-                                        required
-                                    />
-                                </div>
-                            </div>
+                    <div className="mt-8 text-center">
+                        <p className="text-xs font-bold text-shubakar-muted">
+                            New to the platform?
+                            <Link to="/signup" className="text-shubakar-secondary ml-2 font-black hover:text-shubakar-primary transition-colors">
+                                Sign Up
+                            </Link>
+                        </p>
+                    </div>
 
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between ml-1 leading-none">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Password</label>
-                                    <button type="button" className="text-[10px] font-bold text-brand-accent uppercase tracking-widest hover:text-brand-header transition-colors">Forgot Password?</button>
-                                </div>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-accent transition-colors">
-                                        <Lock size={18} />
-                                    </div>
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full pl-11 pr-12 py-3.5 bg-slate-50 border border-brand-border rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent focus:bg-white outline-none transition-all font-medium text-slate-700 shadow-sm"
-                                        placeholder="••••••••"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
-                                    >
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full btn-primary h-14 text-base font-bold tracking-tight shadow-md flex items-center justify-center gap-2"
-                            >
-                                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Log In to Dashboard'}
-                            </button>
-                        </form>
-
-                        <div className="mt-8 text-center">
-                            <p className="text-xs text-slate-400 font-medium">
-                                Testing? Use <span className="text-slate-600 font-bold">Admin123!</span>
-                            </p>
-                        </div>
+                    <div className="mt-10 text-center">
+                        <p className="text-[10px] font-black text-shubakar-muted uppercase tracking-widest leading-relaxed">
+                            &copy; 2024 Shubakar Planning Platform <br />
+                            Ensuring <span className="text-shubakar-secondary">Perfect Celebrations</span> Every Time.
+                        </p>
                     </div>
                 </div>
-
-                <p className="mt-8 text-center text-sm text-slate-400 font-medium">
-                    &copy; 2024 Dashee Inc. Built with AI Excellence.
-                </p>
             </div>
         </div>
     );

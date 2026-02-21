@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, User, Mail, Briefcase, Calendar, Phone, Globe, Shield } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, User, Mail, Briefcase, Calendar, Phone, Globe, ShieldCheck, Zap } from 'lucide-react';
 import apiClient from '../api/client';
 
 const FormInput = ({ label, icon: Icon, ...props }) => (
-    <div className="space-y-2">
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{label}</label>
+    <div className="space-y-1.5">
+        <label className="text-[10px] font-black text-shubakar-muted uppercase tracking-[0.2em] ml-2">{label}</label>
         <div className="relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-accent transition-colors">
+            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-shubakar-muted group-focus-within:text-shubakar-primary transition-colors">
                 <Icon size={18} />
             </div>
             <input
                 {...props}
-                className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-brand-border rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent focus:bg-white outline-none transition-all font-medium text-slate-700 shadow-sm"
+                className="block w-full pl-14 pr-6 py-4 bg-shubakar-softBg/50 border-2 border-transparent rounded-2xl focus:border-shubakar-primary/20 focus:bg-white outline-none transition-all font-bold text-shubakar-text placeholder:text-shubakar-muted/40"
             />
         </div>
     </div>
@@ -45,8 +45,6 @@ const EmployeeFormPage = () => {
                         setFormData(res.data.data);
                     }
                 } catch (error) {
-                    console.error(error);
-                    alert('Failed to fetch employee details');
                     navigate('/employees');
                 } finally {
                     setFetching(false);
@@ -67,8 +65,7 @@ const EmployeeFormPage = () => {
             }
             navigate('/employees');
         } catch (error) {
-            console.error(error);
-            alert(error.response?.data?.message || 'Failed to save employee');
+            alert(error.response?.data?.message || 'Update Failed');
         } finally {
             setLoading(false);
         }
@@ -80,44 +77,53 @@ const EmployeeFormPage = () => {
 
     if (fetching) return (
         <div className="flex h-screen items-center justify-center -mt-20">
-            <Loader2 className="animate-spin text-brand-accent" size={48} />
+            <Loader2 className="animate-spin text-shubakar-primary" size={48} />
         </div>
     );
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+        <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
                     <Link
                         to="/employees"
-                        className="p-3 bg-white rounded-2xl shadow-premium border border-brand-border text-slate-400 hover:text-brand-header hover:border-brand-accent transition-all group"
+                        className="w-14 h-14 bg-white rounded-2xl shadow-soft border border-shubakar-border flex items-center justify-center text-shubakar-muted hover:text-shubakar-primary hover:border-shubakar-primary/30 hover:-translate-x-1 transition-all"
                     >
-                        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                        <ArrowLeft size={24} />
                     </Link>
                     <div>
-                        <h1 className="text-3xl font-extrabold text-brand-header tracking-tight">
-                            {isEdit ? 'Refine Personnel' : 'Onboard Employee'}
+                        <div className="flex items-center gap-2 mb-1">
+                            <Zap size={14} className="text-shubakar-accent fill-shubakar-accent" />
+                            <span className="text-[11px] font-black text-shubakar-primary uppercase tracking-[0.3em]">{isEdit ? 'PROFILE ADJUSTMENT' : 'PERSONNEL ORIGINATION'}</span>
+                        </div>
+                        <h1 className="text-4xl font-black text-shubakar-text tracking-tighter leading-none italic">
+                            {isEdit ? 'Refine Record' : 'Onboard Recruit'}
                         </h1>
-                        <p className="text-slate-500 font-medium">Configure individual data and system associations.</p>
                     </div>
                 </div>
                 <button
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="btn-primary flex items-center gap-2 h-14 px-10 shadow-lg shadow-brand-accent/20"
+                    className="btn-vibrant h-16 px-12 group"
                 >
-                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save size={20} />}
-                    {isEdit ? 'Sync Changes' : 'Initialize Profile'}
+                    {loading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <Save size={22} className="group-hover:rotate-12 transition-transform" />
+                            <span className="text-lg">Finalize Protocol</span>
+                        </div>
+                    )}
                 </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="md:col-span-2 bg-white rounded-[2.5rem] shadow-premium border border-brand-border p-10 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-brand-header/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <form onSubmit={handleSubmit} className="glass-card p-1 md:p-1 relative overflow-hidden overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-shubakar-secondary/5 rounded-full blur-[100px] -mr-48 -mt-48"></div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 relative z-10">
+                <div className="p-10 md:p-12 space-y-10 relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                         <FormInput
-                            label="First Name"
+                            label="First Identity"
                             name="first_name"
                             icon={User}
                             value={formData.first_name}
@@ -126,7 +132,7 @@ const EmployeeFormPage = () => {
                             required
                         />
                         <FormInput
-                            label="Last Name"
+                            label="Secondary Identity"
                             name="last_name"
                             icon={User}
                             value={formData.last_name}
@@ -135,43 +141,43 @@ const EmployeeFormPage = () => {
                             required
                         />
                         <FormInput
-                            label="Professional Email"
+                            label="Credential Email"
                             name="email"
                             type="email"
                             icon={Mail}
                             value={formData.email}
                             onChange={handleChange}
-                            placeholder="lennert@dashee.com"
+                            placeholder="recruit@shubakar.com"
                             required
                         />
                         <FormInput
-                            label="Contact Phone"
+                            label="Comms Frequency"
                             name="phone"
                             icon={Phone}
                             value={formData.phone}
                             onChange={handleChange}
-                            placeholder="+1 (555) 000-0000"
+                            placeholder="+91 000-000-0000"
                         />
                         <FormInput
-                            label="Department"
+                            label="Operational Dept"
                             name="department"
                             icon={Globe}
                             value={formData.department}
                             onChange={handleChange}
-                            placeholder="e.g. Engineering"
+                            placeholder="e.g. Celebrations Ops"
                             required
                         />
                         <FormInput
-                            label="Designation"
+                            label="Strategic Title"
                             name="designation"
                             icon={Briefcase}
                             value={formData.designation}
                             onChange={handleChange}
-                            placeholder="e.g. Senior Architect"
+                            placeholder="e.g. Logistics Maestro"
                             required
                         />
                         <FormInput
-                            label="Date Joined"
+                            label="Origination Date"
                             name="date_joined"
                             type="date"
                             icon={Calendar}
@@ -180,14 +186,14 @@ const EmployeeFormPage = () => {
                             required
                         />
 
-                        <div className="md:col-span-2 mt-4 p-6 bg-brand-header/5 rounded-3xl border border-brand-header/10 flex items-start gap-4">
-                            <div className="bg-brand-header p-3 rounded-xl text-brand-accent shadow-md">
-                                <Shield size={24} />
+                        <div className="md:col-span-2 mt-4 p-8 bg-shubakar-softBg/50 border-2 border-dashed border-shubakar-border rounded-[2rem] flex items-center gap-6">
+                            <div className="bg-shubakar-secondary p-4 rounded-2xl text-white shadow-lg">
+                                <ShieldCheck size={28} />
                             </div>
                             <div>
-                                <h4 className="font-bold text-brand-header">Security Note</h4>
-                                <p className="text-xs text-slate-500 font-medium leading-relaxed mt-1">
-                                    Employee records are strictly audited. Creating or updating personnel will trigger a system-wide security log entry. Ensure all data conforms to corporate compliance standards.
+                                <h4 className="text-sm font-black text-shubakar-text tracking-tight uppercase">Security Clearance Notice</h4>
+                                <p className="text-xs text-shubakar-muted font-bold leading-relaxed mt-1 italic">
+                                    All recruitment data is synchronized via the Shubakar Secure Cloud. Unauthorized modifications are logged to the global audit feed.
                                 </p>
                             </div>
                         </div>

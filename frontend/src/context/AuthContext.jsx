@@ -45,6 +45,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const register = async (email, password, firstName, lastName) => {
+        try {
+            await apiClient.post('/auth/register/', {
+                email,
+                password,
+                first_name: firstName,
+                last_name: lastName
+            });
+            // Automatically login after registration
+            return await login(email, password);
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.email?.[0] || 'Registration failed'
+            };
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
@@ -53,7 +71,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, hasPermission: (code) => user?.permissions?.includes(code) }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, hasPermission: (code) => user?.permissions?.includes(code) }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,35 +1,30 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Users, ShieldCheck, Activity, UserPlus, FileText, ArrowRight } from 'lucide-react';
+import { Sparkles, Users, ShieldCheck, Activity, UserPlus, ArrowRight, Zap, Star, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const StatCard = ({ icon: Icon, label, value, color, description }) => (
-    <div className="bg-white rounded-2xl p-6 shadow-premium border border-brand-border hover:border-brand-accent/30 transition-all group">
-        <div className="flex items-center justify-between mb-4">
-            <div className={`p-3 rounded-xl ${color} text-white shadow-sm group-hover:scale-110 transition-transform`}>
-                <Icon size={24} />
-            </div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">{description}</span>
+const StatCard = ({ icon: Icon, label, value, color, delay }) => (
+    <div className={`bg-white rounded-[2rem] p-8 shadow-soft border border-shubakar-border hover:scale-[1.02] transition-all duration-300 animate-in fade-in slide-in-from-bottom-5 delay-${delay}`}>
+        <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center text-white mb-6 shadow-lg`}>
+            <Icon size={28} />
         </div>
-        <div className="space-y-1">
-            <h3 className="text-3xl font-extrabold text-slate-800">{value}</h3>
-            <p className="text-sm font-medium text-slate-500 tracking-tight">{label}</p>
-        </div>
+        <p className="text-[10px] font-black text-shubakar-muted uppercase tracking-[0.2em] mb-1">{label}</p>
+        <h3 className="text-3xl font-black text-shubakar-text tracking-tighter">{value}</h3>
     </div>
 );
 
 const ActivityItem = ({ title, subtitle, time, icon: Icon, color }) => (
-    <div className="flex items-center justify-between py-4 group">
+    <div className="flex items-center justify-between py-5 group border-b border-shubakar-border/50 last:border-0">
         <div className="flex items-center gap-4">
-            <div className={`p-2.5 rounded-lg ${color} text-white group-hover:rotate-6 transition-transform`}>
+            <div className={`w-10 h-10 rounded-xl ${color} text-white flex items-center justify-center shadow-sm`}>
                 <Icon size={18} />
             </div>
             <div>
-                <p className="text-sm font-bold text-slate-800 tracking-tight">{title}</p>
-                <p className="text-xs text-slate-500 font-medium">{subtitle}</p>
+                <p className="text-sm font-black text-shubakar-text leading-none">{title}</p>
+                <p className="text-xs text-shubakar-muted font-bold mt-1">{subtitle}</p>
             </div>
         </div>
-        <span className="text-[10px] font-bold text-slate-400 uppercase">{time}</span>
+        <span className="text-[10px] font-black text-shubakar-muted uppercase opacity-40">{time}</span>
     </div>
 );
 
@@ -38,109 +33,95 @@ const Dashboard = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-brand-header tracking-tight">
-                        Welcome back, {user?.first_name || 'Admin'}!
+        <div className="space-y-10 pb-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="animate-in fade-in slide-in-from-left-5 duration-700">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Zap size={16} className="text-shubakar-primary animate-pulse" />
+                        <span className="text-[11px] font-black text-shubakar-primary uppercase tracking-[0.3em]">Operational Pulse</span>
+                    </div>
+                    <h1 className="text-4xl font-black text-shubakar-text tracking-tighter leading-none">
+                        Welcome back, <span className="shubakar-gradient-text italic">{user?.first_name || 'Partner'}</span>!
                     </h1>
-                    <p className="text-slate-500 font-medium mt-1">Here's what's happening in your system today.</p>
+                    <p className="text-shubakar-muted font-bold mt-2">Managing your perfect celebration engine today.</p>
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="flex gap-3">
                     <button
                         onClick={() => navigate('/employees/new')}
-                        className="btn-primary flex items-center gap-2"
+                        className="btn-vibrant flex items-center gap-2 pr-8"
                     >
                         <UserPlus size={18} />
-                        Add Employee
+                        Add Member
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatCard
-                    icon={Users}
-                    label="Total Employees"
-                    value="1,284"
-                    color="bg-brand-header"
-                    description="Active Roster"
-                />
-                <StatCard
-                    icon={ShieldCheck}
-                    label="Active Permissions"
-                    value="24"
-                    color="bg-brand-accent text-brand-header"
-                    description="System Integrity"
-                />
-                <StatCard
-                    icon={Activity}
-                    label="Audited Actions"
-                    value="982"
-                    color="bg-emerald-600"
-                    description="Security Log"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <StatCard icon={Users} label="Total Personnel" value="1,240" color="bg-shubakar-secondary" delay="0" />
+                <StatCard icon={ShieldCheck} label="Secured Nodes" value="48" color="bg-shubakar-primary" delay="75" />
+                <StatCard icon={Activity} label="System Events" value="9.2k" color="bg-shubakar-accent text-shubakar-text" delay="150" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-2xl shadow-premium border border-brand-border overflow-hidden">
-                        <div className="px-6 py-5 border-b border-brand-border flex items-center justify-between bg-brand-tableHeader/30">
-                            <h3 className="font-bold text-brand-header tracking-tight">Recent Activity</h3>
-                            <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 group">
-                                View Full Audit Log
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <div className="lg:col-span-8 space-y-8">
+                    <div className="bg-white rounded-[2.5rem] shadow-soft border border-shubakar-border overflow-hidden p-1">
+                        <div className="px-8 py-6 flex items-center justify-between">
+                            <h3 className="text-lg font-black text-shubakar-text tracking-tight flex items-center gap-2">
+                                <Star size={20} className="text-shubakar-accent fill-shubakar-accent" />
+                                Global Audit Feed
+                            </h3>
+                            <button className="text-[10px] font-black text-shubakar-secondary hover:text-shubakar-primary uppercase tracking-widest transition-colors flex items-center gap-1 group">
+                                Full History
                                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
-                        <div className="p-6 divide-y divide-brand-border/60">
+                        <div className="px-8 pb-4">
                             <ActivityItem
-                                title="Permission Assigned"
-                                subtitle="Admin granted VIEW_EMPLOYEE to John Doe"
-                                time="2 mins ago"
+                                title="Access Protocol Adjusted"
+                                subtitle="System granted Full View to Sarah Mitchell"
+                                time="JUST NOW"
                                 icon={ShieldCheck}
-                                color="bg-brand-header"
+                                color="bg-shubakar-secondary"
                             />
                             <ActivityItem
-                                title="New Employee Onboarded"
-                                subtitle="Jane Smith joined the Engineering team"
-                                time="15 mins ago"
+                                title="New Member Registered"
+                                subtitle="David Chen joined the Event Logistic team"
+                                time="12 MINS AGO"
                                 icon={UserPlus}
-                                color="bg-brand-accent"
+                                color="bg-shubakar-primary"
                             />
                             <ActivityItem
-                                title="System Policy Updated"
-                                subtitle="Modified password complexity requirements"
-                                time="1 hour ago"
-                                icon={FileText}
-                                color="bg-slate-700"
-                            />
-                            <ActivityItem
-                                title="Unauthorized Access Blocked"
-                                subtitle="Failed login attempt from ip 192.168.1.5"
-                                time="3 hours ago"
-                                icon={Activity}
-                                color="bg-red-500"
+                                title="Audit Log Exported"
+                                subtitle="Monthly security wrap-up delivered to compliance"
+                                time="45 MINS AGO"
+                                icon={Zap}
+                                color="bg-shubakar-text"
                             />
                         </div>
                     </div>
                 </div>
 
-                <div className="space-y-6">
-                    <div className="bg-brand-header rounded-2xl shadow-premium border border-white/10 p-8 text-white relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                        <h3 className="text-xl font-bold mb-2 relative z-10">Quick Permissions</h3>
-                        <p className="text-white/70 text-sm mb-6 relative z-10">Quickly assign standard access sets to existing staff.</p>
-                        <div className="space-y-3 relative z-10">
-                            {['View Only', 'Support Staff', 'Manager Plus'].map(role => (
-                                <button key={role} className="w-full bg-white/10 hover:bg-white/20 px-4 py-3 rounded-xl text-left text-sm font-semibold transition-all border border-white/5">
-                                    {role}
-                                </button>
-                            ))}
+                <div className="lg:col-span-4 flex">
+                    <div className="w-full bg-gradient-to-br from-shubakar-primary to-shubakar-secondary rounded-[2.5rem] p-10 text-white relative overflow-hidden flex flex-col justify-between shadow-soft">
+                        <div className="absolute top-0 right-0 p-8 opacity-20 rotate-12">
+                            <Sparkles size={120} />
+                        </div>
+
+                        <div className="relative z-10">
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mb-2 block">System Alert</span>
+                            <h3 className="text-2xl font-black tracking-tight leading-tight">Your permissions define the legacy.</h3>
+                            <p className="text-white/70 text-sm font-bold mt-4 leading-relaxed">
+                                Manage granular access to ensure Shubakar remains the world's most trusted event engine.
+                            </p>
+                        </div>
+
+                        <div className="relative z-10 pt-10">
                             <button
                                 onClick={() => navigate('/permissions')}
-                                className="w-full mt-4 flex items-center justify-center gap-2 text-brand-accent text-sm font-bold opacity-90 hover:opacity-100 transition-opacity"
+                                className="bg-white text-shubakar-primary px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-transform"
                             >
-                                Custom Configuration
-                                <ArrowRight size={16} />
+                                Configure Access
                             </button>
                         </div>
                     </div>
