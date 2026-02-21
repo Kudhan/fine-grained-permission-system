@@ -9,18 +9,27 @@ import EmployeeFormPage from './pages/EmployeeFormPage';
 import PermissionManagementPage from './pages/PermissionManagementPage';
 import ProfilePage from './pages/ProfilePage';
 
+import Navbar from './components/layout/Navbar';
+
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
-    if (loading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    if (loading) return (
+        <div className="flex h-screen items-center justify-center bg-brand-bg">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-brand-header animate-pulse font-medium">Initializing Dashboard...</p>
+            </div>
+        </div>
+    );
     if (!user) return <Navigate to="/login" />;
     return children;
 };
 
 const Layout = ({ children }) => {
     return (
-        <div className="flex h-screen bg-gray-100">
-            <Sidebar />
-            <main className="flex-1 overflow-y-auto p-8">
+        <div className="min-h-screen bg-brand-bg flex flex-col">
+            <Navbar />
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
                 {children}
             </main>
         </div>

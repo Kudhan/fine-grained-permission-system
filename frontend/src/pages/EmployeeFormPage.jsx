@@ -1,15 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ArrowLeft, Save, Loader2, User, Mail, Briefcase, Calendar, Phone, Globe, Shield } from 'lucide-react';
 import apiClient from '../api/client';
+
+const FormInput = ({ label, icon: Icon, ...props }) => (
+    <div className="space-y-2">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">{label}</label>
+        <div className="relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-brand-accent transition-colors">
+                <Icon size={18} />
+            </div>
+            <input
+                {...props}
+                className="block w-full pl-11 pr-4 py-3 bg-slate-50 border border-brand-border rounded-xl focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent focus:bg-white outline-none transition-all font-medium text-slate-700 shadow-sm"
+            />
+        </div>
+    </div>
+);
 
 const EmployeeFormPage = () => {
     const { id } = useParams();
-    const isEdit = Boolean(id);
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(isEdit);
-    const [submitting, setSubmitting] = useState(false);
-    const [errors, setErrors] = useState({});
+    const isEdit = !!id;
+
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
@@ -20,173 +33,165 @@ const EmployeeFormPage = () => {
         date_joined: new Date().toISOString().split('T')[0],
     });
 
+    const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(isEdit);
+
     useEffect(() => {
         if (isEdit) {
             const fetchEmployee = async () => {
                 try {
-                    const response = await apiClient.get(`/employees/${id}/`);
-                    if (response.data.success) {
-                        setFormData(response.data.data);
+                    const res = await apiClient.get(`/employees/${id}/`);
+                    if (res.data.success) {
+                        setFormData(res.data.data);
                     }
                 } catch (error) {
-                    console.error('Failed to fetch employee', error);
+                    console.error(error);
+                    alert('Failed to fetch employee details');
                     navigate('/employees');
                 } finally {
-                    setLoading(false);
+                    setFetching(false);
                 }
             };
             fetchEmployee();
         }
     }, [id, isEdit, navigate]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmitting(true);
-        setErrors({});
-
+        setLoading(true);
         try {
-            const url = isEdit ? `/employees/${id}/` : '/employees/';
-            const method = isEdit ? 'put' : 'post';
-            const response = await apiClient[method](url, formData);
-
-            if (response.data.success) {
-                navigate('/employees');
-            }
-        } catch (error) {
-            if (error.response?.data?.errors) {
-                setErrors(error.response.data.errors);
+            if (isEdit) {
+                await apiClient.put(`/employees/${id}/`, formData);
             } else {
-                alert(error.response?.data?.message || 'Something went wrong');
+                await apiClient.post('/employees/', formData);
             }
+            navigate('/employees');
+        } catch (error) {
+            console.error(error);
+            alert(error.response?.data?.message || 'Failed to save employee');
         } finally {
-            setSubmitting(false);
+            setLoading(false);
         }
     };
 
-    if (loading) return <div className="flex h-64 items-center justify-center">Loading...</div>;
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    if (fetching) return (
+        <div className="flex h-screen items-center justify-center -mt-20">
+            <Loader2 className="animate-spin text-brand-accent" size={48} />
+        </div>
+    );
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            <div className="flex items-center gap-4">
-                <button onClick={() => navigate('/employees')} className="p-2 hover:bg-white rounded-full transition-colors">
-                    <ArrowLeft size={20} />
-                </button>
-                <h1 className="text-2xl font-bold text-gray-900">
-                    {isEdit ? 'Edit Employee' : 'New Employee'}
-                </h1>
-            </div>
-
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">First Name</label>
-                        <input
-                            type="text"
-                            name="first_name"
-                            required
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
-                            value={formData.first_name}
-                            onChange={handleChange}
-                        />
-                        {errors.first_name && <p className="text-xs text-red-600">{errors.first_name}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Last Name</label>
-                        <input
-                            type="text"
-                            name="last_name"
-                            required
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
-                            value={formData.last_name}
-                            onChange={handleChange}
-                        />
-                        {errors.last_name && <p className="text-xs text-red-600">{errors.last_name}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Email Address</label>
-                        <input
-                            type="email"
-                            name="email"
-                            required
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
-                            value={formData.email}
-                            onChange={handleChange}
-                        />
-                        {errors.email && <p className="text-xs text-red-600">{errors.email}</p>}
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Phone Number</label>
-                        <input
-                            type="text"
-                            name="phone"
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
-                            value={formData.phone}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Department</label>
-                        <input
-                            type="text"
-                            name="department"
-                            required
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
-                            value={formData.department}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Designation</label>
-                        <input
-                            type="text"
-                            name="designation"
-                            required
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
-                            value={formData.designation}
-                            onChange={handleChange}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">Date Joined</label>
-                        <input
-                            type="date"
-                            name="date_joined"
-                            required
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
-                            value={formData.date_joined}
-                            onChange={handleChange}
-                        />
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 pb-20">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Link
+                        to="/employees"
+                        className="p-3 bg-white rounded-2xl shadow-premium border border-brand-border text-slate-400 hover:text-brand-header hover:border-brand-accent transition-all group"
+                    >
+                        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                    </Link>
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-brand-header tracking-tight">
+                            {isEdit ? 'Refine Personnel' : 'Onboard Employee'}
+                        </h1>
+                        <p className="text-slate-500 font-medium">Configure individual data and system associations.</p>
                     </div>
                 </div>
+                <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="btn-primary flex items-center gap-2 h-14 px-10 shadow-lg shadow-brand-accent/20"
+                >
+                    {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save size={20} />}
+                    {isEdit ? 'Sync Changes' : 'Initialize Profile'}
+                </button>
+            </div>
 
-                <div className="flex justify-end gap-4 border-t border-gray-100 pt-6">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/employees')}
-                        className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="flex items-center gap-2 bg-primary-600 px-8 py-2.5 text-sm font-medium text-white hover:bg-primary-700 rounded-lg shadow-sm transition-colors disabled:bg-primary-400"
-                    >
-                        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save size={18} />}
-                        {isEdit ? 'Update Employee' : 'Create Employee'}
-                    </button>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="md:col-span-2 bg-white rounded-[2.5rem] shadow-premium border border-brand-border p-10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-brand-header/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 relative z-10">
+                        <FormInput
+                            label="First Name"
+                            name="first_name"
+                            icon={User}
+                            value={formData.first_name}
+                            onChange={handleChange}
+                            placeholder="e.g. Lennert"
+                            required
+                        />
+                        <FormInput
+                            label="Last Name"
+                            name="last_name"
+                            icon={User}
+                            value={formData.last_name}
+                            onChange={handleChange}
+                            placeholder="e.g. Nijenbijvank"
+                            required
+                        />
+                        <FormInput
+                            label="Professional Email"
+                            name="email"
+                            type="email"
+                            icon={Mail}
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="lennert@dashee.com"
+                            required
+                        />
+                        <FormInput
+                            label="Contact Phone"
+                            name="phone"
+                            icon={Phone}
+                            value={formData.phone}
+                            onChange={handleChange}
+                            placeholder="+1 (555) 000-0000"
+                        />
+                        <FormInput
+                            label="Department"
+                            name="department"
+                            icon={Globe}
+                            value={formData.department}
+                            onChange={handleChange}
+                            placeholder="e.g. Engineering"
+                            required
+                        />
+                        <FormInput
+                            label="Designation"
+                            name="designation"
+                            icon={Briefcase}
+                            value={formData.designation}
+                            onChange={handleChange}
+                            placeholder="e.g. Senior Architect"
+                            required
+                        />
+                        <FormInput
+                            label="Date Joined"
+                            name="date_joined"
+                            type="date"
+                            icon={Calendar}
+                            value={formData.date_joined}
+                            onChange={handleChange}
+                            required
+                        />
+
+                        <div className="md:col-span-2 mt-4 p-6 bg-brand-header/5 rounded-3xl border border-brand-header/10 flex items-start gap-4">
+                            <div className="bg-brand-header p-3 rounded-xl text-brand-accent shadow-md">
+                                <Shield size={24} />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-brand-header">Security Note</h4>
+                                <p className="text-xs text-slate-500 font-medium leading-relaxed mt-1">
+                                    Employee records are strictly audited. Creating or updating personnel will trigger a system-wide security log entry. Ensure all data conforms to corporate compliance standards.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
