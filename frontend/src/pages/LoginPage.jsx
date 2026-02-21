@@ -26,8 +26,11 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-brand-bg flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
-            <div className="max-w-md w-full animate-in zoom-in duration-500">
+        <div className="min-h-screen bg-brand-bg flex items-center justify-center p-6 relative overflow-hidden">
+            {/* SaaS Pattern Overlay */}
+            <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#003333 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+
+            <div className="max-w-md w-full animate-in zoom-in duration-500 relative z-10">
                 <div className="bg-white rounded-[2rem] shadow-premium border border-brand-border p-10 relative overflow-hidden">
                     {/* Decorative element */}
                     <div className="absolute -top-12 -right-12 w-40 h-40 bg-brand-accent/5 rounded-full blur-2xl"></div>

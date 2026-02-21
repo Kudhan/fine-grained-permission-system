@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
-import Sidebar from './components/layout/Sidebar';
 import EmployeeListPage from './pages/EmployeeListPage';
 import EmployeeFormPage from './pages/EmployeeFormPage';
 import PermissionManagementPage from './pages/PermissionManagementPage';
