@@ -7,19 +7,27 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: {
-                    50: '#f0f9ff',
-                    100: '#e0f2fe',
-                    200: '#bae6fd',
-                    300: '#7dd3fc',
-                    400: '#38bdf8',
-                    500: '#0ea5e9',
-                    600: '#0284c7',
-                    700: '#0369a1',
-                    800: '#075985',
-                    900: '#0c4a6e',
+                brand: {
+                    header: '#003333', // Deep teal from image
+                    accent: '#FFC760', # Amber / Gold
+          accentHover: '#F5B74D',
+                    surface: '#FFFFFF',
+                    bg: '#F8FAFA',
+                    tableHeader: '#F9FAFB',
+                    border: '#E5E7EB',
                 },
+                status: {
+                    manager: '#FFC760',
+                    admin: '#003333',
+                    auditor: '#10B981',
+                }
             },
+            fontFamily: {
+                sans: ['Inter', 'sans-serif'],
+            },
+            boxShadow: {
+                'premium': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 10px -2px rgba(0, 0, 0, 0.03)',
+            }
         },
     },
     plugins: [],

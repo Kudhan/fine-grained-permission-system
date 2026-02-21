@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Shield, Loader2, Save, User as UserIcon } from 'lucide-react';
 import apiClient from '../api/client';
-import { api_response } from '../api/client'; // Note: api_response is backend utility, just using standardized check here
 
 const PermissionManagementPage = () => {
     const [users, setUsers] = useState([]);
@@ -147,8 +146,8 @@ const PermissionManagementPage = () => {
                                     <label
                                         key={perm.code}
                                         className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer ${userPermissions.includes(perm.code)
-                                                ? 'bg-primary-50 border-primary-200 ring-1 ring-primary-200'
-                                                : 'bg-white border-gray-200 hover:border-primary-100'
+                                            ? 'bg-primary-50 border-primary-200 ring-1 ring-primary-200'
+                                            : 'bg-white border-gray-200 hover:border-primary-100'
                                             }`}
                                     >
                                         <div className="pt-0.5">
