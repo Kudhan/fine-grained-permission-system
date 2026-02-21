@@ -1,8 +1,8 @@
 import os
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 
-import dj_database_url
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -28,7 +28,6 @@ INSTALLED_APPS = [
 
     # Third party
     "rest_framework",
-    "rest_framework.authtoken",
     "corsheaders",
 
     # Internal apps
@@ -71,15 +70,21 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # =========================
-# DATABASE (Supabase PostgreSQL)
+# DATABASE (Native PostgreSQL)
 # =========================
 DATABASES = {
-    "default": dj_database_url.parse(
-        os.getenv("DATABASE_URL"),
+    'default': dj_database_url.config(
+        default=os.getenv('DATABASE_URL'),
         conn_max_age=600,
-        ssl_require=True,
+        conn_health_checks=True,
     )
 }
+
+# Ensure Postgres usage and SSL for Supabase if not local
+if not DEBUG and DATABASES['default'].get('ENGINE') == 'django.db.backends.postgresql':
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'require',
+    }
 
 # =========================
 # PASSWORD VALIDATION

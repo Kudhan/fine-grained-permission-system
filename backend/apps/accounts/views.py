@@ -2,6 +2,9 @@ from rest_framework import generics, permissions
 from rest_framework.response import Response
 from .serializers import UserSerializer, UserRegistrationSerializer, CustomTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from apps.core.utils import api_response
+from apps.permissions.permissions import HasPermission
+from .models import User
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
@@ -18,8 +21,23 @@ class MeView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer(request.user)
+        return api_response(data=serializer.data, message="Profile retrieved successfully")
+
+class UserListView(generics.ListAPIView):
+    """
+    GET /auth/users/ (Wait, I'll put it in auth for now as there's no accounts/ urls)
+    Lists all users in the system.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [HasPermission('ASSIGN_PERMISSION')]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return api_response(data=serializer.data, message="Users retrieved successfully")
 
 class RegisterView(generics.CreateAPIView):
     """

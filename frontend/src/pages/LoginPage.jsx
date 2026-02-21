@@ -1,127 +1,112 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Sparkles, Mail, Lock, Loader2, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuthStore } from '../hooks/useAuthStore';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    const { login } = useAuth();
+    const { login, loading, error } = useAuthStore();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setLoading(true);
-
         const result = await login(email, password);
-        if (!result.success) {
-            setError(result.message);
-            setLoading(false);
+        if (result.success) {
+            navigate('/dashboard');
         }
     };
 
     return (
-        <div className="min-h-screen bg-hero-gradient flex items-center justify-center p-6 relative overflow-hidden">
-            {/* Visual background elements */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-shubakar-secondary/5 rounded-full blur-[100px] -mr-48 -mt-48"></div>
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-shubakar-primary/5 rounded-full blur-[100px] -ml-48 -mb-48"></div>
+        <div className="min-h-screen w-full flex items-center justify-center bg-background relative overflow-hidden">
+            {/* Background blur effects */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
 
-            <div className="max-w-md w-full animate-in zoom-in duration-700 relative z-10">
-                <div className="glass-card p-10 md:p-12">
-                    <div className="flex flex-col items-center mb-10 text-center">
-                        <div className="bg-shubakar-primary p-4 rounded-[1.5rem] shadow-vibrant mb-6 ring-8 ring-shubakar-primary/10">
-                            <Sparkles className="text-white" size={32} />
-                        </div>
-                        <h2 className="text-4xl font-black text-shubakar-text tracking-tighter italic">SHUBAKAR</h2>
-                        <p className="text-shubakar-muted font-bold text-sm uppercase tracking-widest mt-2">Administrative Gateway</p>
+            <div className="w-full max-w-md p-4 relative z-10 animate-in fade-in zoom-in duration-500">
+                <div className="flex flex-col items-center mb-8">
+                    <div className="bg-primary p-3 rounded-2xl text-primary-foreground shadow-xl shadow-primary/20 mb-4">
+                        <Sparkles size={32} className="fill-current" />
                     </div>
+                    <h1 className="text-3xl font-bold tracking-tight">Fine-Grained PS</h1>
+                    <p className="text-muted-foreground mt-2">Advanced Permission System</p>
+                </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && (
-                            <div className="bg-red-50 border-2 border-red-100 p-4 rounded-2xl text-red-600 text-xs font-bold animate-in slide-in-from-top-2">
-                                {error}
-                            </div>
-                        )}
-
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-black text-shubakar-muted uppercase tracking-[0.2em] ml-2">Email Address</label>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-shubakar-muted group-focus-within:text-shubakar-primary transition-colors">
-                                    <Mail size={18} />
+                <Card className="border-border/50 shadow-2xl backdrop-blur-sm bg-card/80">
+                    <CardHeader className="space-y-1">
+                        <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
+                        <CardDescription className="text-center">
+                            Enter your credentials to access your dashboard
+                        </CardDescription>
+                    </CardHeader>
+                    <form onSubmit={handleSubmit}>
+                        <CardContent className="space-y-4">
+                            {error && (
+                                <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 border border-destructive/20 animate-in slide-in-from-top-2">
+                                    <AlertCircle size={16} />
+                                    {error}
                                 </div>
-                                <input
-                                    type="email"
+                            )}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Email Address
+                                </label>
+                                <Input 
+                                    type="email" 
+                                    placeholder="name@example.com" 
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full pl-12 pr-4 py-4 bg-shubakar-softBg/50 border-2 border-transparent rounded-2xl focus:border-shubakar-primary/20 focus:bg-white outline-none transition-all font-bold text-shubakar-text placeholder:text-shubakar-muted/40"
-                                    placeholder="admin@shubakar.com"
                                     required
+                                    className="bg-background/50 border-border focus:ring-primary h-11"
                                 />
                             </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between mx-2">
-                                <label className="text-[10px] font-black text-shubakar-muted uppercase tracking-[0.2em]">Password</label>
-                                <button type="button" className="text-[10px] font-black text-shubakar-secondary uppercase tracking-widest hover:text-shubakar-primary transition-colors">Recover</button>
-                            </div>
-                            <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-shubakar-muted group-focus-within:text-shubakar-primary transition-colors">
-                                    <Lock size={18} />
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">
+                                        Password
+                                    </label>
+                                    <button type="button" className="text-xs text-primary hover:underline">
+                                        Forgot password?
+                                    </button>
                                 </div>
-                                <input
-                                    type={showPassword ? "text" : "password"}
+                                <Input 
+                                    type="password" 
+                                    placeholder="••••••••" 
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full pl-12 pr-12 py-4 bg-shubakar-softBg/50 border-2 border-transparent rounded-2xl focus:border-shubakar-primary/20 focus:bg-white outline-none transition-all font-bold text-shubakar-text placeholder:text-shubakar-muted/40"
-                                    placeholder="••••••••"
                                     required
+                                    className="bg-background/50 border-border focus:ring-primary h-11"
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-shubakar-muted hover:text-shubakar-primary transition-colors"
-                                >
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
                             </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full btn-vibrant py-4 text-base tracking-tight flex items-center justify-center gap-2 group"
-                        >
-                            {loading ? (
-                                <Loader2 className="h-5 w-5 animate-spin" />
-                            ) : (
-                                <>
-                                    Connect to Dashboard
-                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
-                        </button>
+                        </CardContent>
+                        <CardFooter className="flex flex-col space-y-4">
+                            <Button type="submit" className="w-full h-11 font-semibold text-base transition-all active:scale-[0.98]" disabled={loading}>
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Signing in...
+                                    </>
+                                ) : (
+                                    'Sign In'
+                                )}
+                            </Button>
+                            <p className="text-sm text-center text-muted-foreground">
+                                Don't have an account?{' '}
+                                <Link to="/signup" className="text-primary font-semibold hover:underline">
+                                    Create one
+                                </Link>
+                            </p>
+                        </CardFooter>
                     </form>
+                </Card>
 
-                    <div className="mt-8 text-center">
-                        <p className="text-xs font-bold text-shubakar-muted">
-                            New to the platform?
-                            <Link to="/signup" className="text-shubakar-secondary ml-2 font-black hover:text-shubakar-primary transition-colors">
-                                Sign Up
-                            </Link>
-                        </p>
-                    </div>
-
-                    <div className="mt-10 text-center">
-                        <p className="text-[10px] font-black text-shubakar-muted uppercase tracking-widest leading-relaxed">
-                            &copy; 2024 Shubakar Planning Platform <br />
-                            Ensuring <span className="text-shubakar-secondary">Perfect Celebrations</span> Every Time.
-                        </p>
-                    </div>
+                <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+                    <span className="hover:text-foreground cursor-pointer transition-colors">Privacy Policy</span>
+                    <span className="hover:text-foreground cursor-pointer transition-colors">Terms of Service</span>
+                    <span className="hover:text-foreground cursor-pointer transition-colors">Contact Support</span>
                 </div>
             </div>
         </div>
