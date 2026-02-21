@@ -1,209 +1,214 @@
-import React, { useEffect, useState } from 'react';
-import { ShieldAlert, Loader2, Save, User as UserIcon, CheckCircle2, Info, Lock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useAuthStore } from '../hooks/useAuthStore';
+import { 
+    Card, 
+    CardContent, 
+    CardHeader, 
+    CardTitle, 
+    CardDescription 
+} from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import { 
+    Search, 
+    ShieldCheck, 
+    ShieldAlert, 
+    User, 
+    ChevronRight,
+    Loader2,
+    Check,
+    X
+} from 'lucide-react';
 import apiClient from '../api/client';
+import { toast } from 'sonner';
 
 const PermissionManagementPage = () => {
+    const { hasPermission } = useAuthStore();
     const [users, setUsers] = useState([]);
-    const [selectedUser, setSelectedUser] = useState(null);
+    const [permissions, setPermissions] = useState([
+        { code: 'CREATE_EMPLOYEE', name: 'Create Employee', description: 'Can add new personnel to the system' },
+        { code: 'EDIT_EMPLOYEE', name: 'Edit Employee', description: 'Can modify existing personnel details' },
+        { code: 'DELETE_EMPLOYEE', name: 'Delete Employee', description: 'Can remove personnel from the system' },
+        { code: 'VIEW_EMPLOYEE', name: 'View Employees', description: 'Can view the organization chart and lists' },
+        { code: 'VIEW_SELF', name: 'View Self', description: 'Standard access to personal record' },
+        { code: 'ASSIGN_PERMISSION', name: 'Assign Permission', description: 'Admin right to manage user functions' }
+    ]);
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [userPermissions, setUserPermissions] = useState([]);
+    const [search, setSearch] = useState('');
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [updating, setUpdating] = useState(false);
 
-    const allPermissions = [
-        { code: 'CREATE_EMPLOYEE', name: 'Registry Creation', desc: 'Onboard new personnel to the platform' },
-        { code: 'EDIT_EMPLOYEE', name: 'Registry Modification', desc: 'Update existing staff specifications' },
-        { code: 'DELETE_EMPLOYEE', name: 'Registry Deletion', desc: 'Strike inactive members from the database' },
-        { code: 'VIEW_EMPLOYEE', name: 'Registry Inspection', desc: 'Full read access to the personnel registry' },
-        { code: 'VIEW_SELF', name: 'Personal Inspection', desc: 'View own metadata and performance stats' },
-        { code: 'ASSIGN_PERMISSION', name: 'Protocol Assignment', desc: 'Modify system-wide access permissions' },
-    ];
+    const fetchUsers = async () => {
+        setLoading(true);
+        try {
+            // Fetch all users for permission management
+            const response = await apiClient.get('/auth/users/'); 
+            setUsers(response.data.data); 
+        } catch (err) {
+            toast.error("Failed to load users");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await apiClient.get('/employees/');
-                setUsers(res.data.data.results);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+        fetchUsers();
     }, []);
 
-    const handleUserSelect = (user) => {
-        setSelectedUser(user);
-        setUserPermissions(user.permissions || []);
-    };
+    const togglePermission = async (user, permCode) => {
+        if (!hasPermission('ASSIGN_PERMISSION')) {
+            toast.error("Unauthorized to assign permissions");
+            return;
+        }
 
-    const togglePermission = (code) => {
-        setUserPermissions(prev =>
-            prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
-        );
-    };
-
-    const handleSave = async () => {
-        if (!selectedUser) return;
-        setSaving(true);
+        const isAssigned = user.permissions.includes(permCode);
+        const endpoint = isAssigned ? '/permissions/remove/' : '/permissions/assign/';
+        
+        setUpdating(true);
         try {
-            const original = selectedUser.permissions || [];
-            const added = userPermissions.filter(p => !original.includes(p));
-            const removed = original.filter(p => !userPermissions.includes(p));
-
-            if (added.length > 0) {
-                await apiClient.post('/permissions/assign/', {
-                    user_id: selectedUser.id,
-                    permission_codes: added
-                });
+            await apiClient.post(endpoint, {
+                user_id: user.id,
+                permission_codes: [permCode]
+            });
+            toast.success(isAssigned ? "Permission revoked" : "Permission granted");
+            fetchUsers();
+            if (selectedUser?.id === user.id) {
+                const updatedUser = { ...user };
+                if (isAssigned) {
+                    updatedUser.permissions = updatedUser.permissions.filter(p => p !== permCode);
+                } else {
+                    updatedUser.permissions = [...updatedUser.permissions, permCode];
+                }
+                setSelectedUser(updatedUser);
             }
-            if (removed.length > 0) {
-                await apiClient.post('/permissions/remove/', {
-                    user_id: selectedUser.id,
-                    permission_codes: removed
-                });
-            }
-            alert('Security Protocols Synchronized');
-            setSelectedUser({ ...selectedUser, permissions: userPermissions });
         } catch (err) {
-            alert('Authorization Sync Failed');
+            toast.error("Update failed");
         } finally {
-            setSaving(false);
+            setUpdating(false);
         }
     };
 
     return (
-        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-1000">
-            <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                    <div className="h-6 w-1 bg-shubakar-secondary rounded-full"></div>
-                    <span className="text-[11px] font-black text-shubakar-secondary uppercase tracking-[0.3em]">Access Engine</span>
-                </div>
-                <h1 className="text-4xl font-black text-shubakar-text tracking-tighter italic">Protocol Control</h1>
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Access Control</h1>
+                <p className="text-muted-foreground mt-1">Manage granular functions and user permissions.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* User Selector Pane */}
-                <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-white rounded-[2.5rem] shadow-soft border border-shubakar-border overflow-hidden p-2">
-                        <div className="p-6">
-                            <h3 className="text-xs font-black text-shubakar-muted uppercase tracking-widest flex items-center gap-2">
-                                <UserIcon size={16} className="text-shubakar-primary" />
-                                Active Principals
-                            </h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                {/* User List */}
+                <Card className="lg:col-span-1 border-border/50 shadow-sm sticky top-24">
+                    <CardHeader>
+                        <CardTitle className="text-lg">User Directory</CardTitle>
+                        <CardDescription>Select a user to manage their rights</CardDescription>
+                        <div className="relative mt-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                            <Input 
+                                placeholder="Search users..." 
+                                className="pl-9 h-9 text-xs"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
                         </div>
-                        <div className="space-y-1 max-h-[600px] overflow-y-auto px-2 pb-2 custom-scrollbar">
-                            {loading ? (
-                                <div className="p-10 text-center">
-                                    <Loader2 className="animate-spin text-shubakar-primary mx-auto" size={24} />
+                    </CardHeader>
+                    <CardContent className="px-2 pt-0 max-h-[500px] overflow-y-auto">
+                        {loading ? (
+                            <div className="p-4 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+                        ) : users.map(u => (
+                            <div 
+                                key={u.id}
+                                onClick={() => setSelectedUser(u)}
+                                className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${
+                                    selectedUser?.id === u.id 
+                                        ? 'bg-primary/10 border-primary/20 border ring-1 ring-primary/20' 
+                                        : 'hover:bg-muted/50 border border-transparent'
+                                }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
+                                        {u.first_name[0]}{u.last_name[0]}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-semibold truncate">{u.first_name} {u.last_name}</p>
+                                        <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
+                                    </div>
                                 </div>
-                            ) : users.map(user => (
-                                <button
-                                    key={user.id}
-                                    onClick={() => handleUserSelect(user)}
-                                    className={`w-full text-left p-4 flex items-center gap-4 rounded-2xl transition-all group ${selectedUser?.id === user.id
-                                            ? 'bg-shubakar-softBg shadow-inner ring-1 ring-shubakar-secondary/20'
-                                            : 'hover:bg-slate-50'
-                                        }`}
-                                >
-                                    <div className={`h-10 w-10 rounded-xl overflow-hidden shadow-sm transition-transform ${selectedUser?.id === user.id ? 'scale-110' : 'group-hover:scale-105'}`}>
-                                        <img
-                                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
-                                            alt="avatar"
-                                        />
-                                    </div>
-                                    <div className="overflow-hidden">
-                                        <p className={`text-sm font-black truncate leading-none ${selectedUser?.id === user.id ? 'text-shubakar-secondary' : 'text-shubakar-text'}`}>
-                                            {user.first_name} {user.last_name}
-                                        </p>
-                                        <p className="text-[10px] font-bold text-shubakar-muted truncate mt-1">{user.email}</p>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                                <ChevronRight size={16} className={`${selectedUser?.id === u.id ? 'text-primary' : 'text-muted-foreground/30'}`} />
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
 
-                {/* Permission Editor Pane */}
-                <div className="lg:col-span-8">
-                    {selectedUser ? (
-                        <div className="glass-card p-10 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-80 h-80 bg-shubakar-primary/5 rounded-full blur-3xl -mr-40 -mt-40"></div>
-
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 relative z-10">
-                                <div className="flex items-center gap-5">
-                                    <div className="bg-shubakar-primary p-4 rounded-3xl text-white shadow-vibrant">
-                                        <ShieldAlert size={32} />
+                {/* Permission Matrix */}
+                <Card className="lg:col-span-2 border-border/50 shadow-xl min-h-[500px]">
+                    <CardHeader className="border-b border-border/50 bg-muted/5">
+                        {selectedUser ? (
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                                        <ShieldCheck size={24} />
                                     </div>
                                     <div>
-                                        <h3 className="text-2xl font-black text-shubakar-text tracking-tighter leading-none">Security Sync</h3>
-                                        <p className="text-xs font-bold text-shubakar-muted mt-2">Targeting Agent: <span className="text-shubakar-secondary">{selectedUser.first_name} {selectedUser.last_name}</span></p>
+                                        <CardTitle className="text-xl">{selectedUser.first_name}'s Permissions</CardTitle>
+                                        <CardDescription>Configure granular access functions for this user</CardDescription>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="btn-vibrant min-w-[200px] h-14 flex items-center justify-center gap-2"
-                                >
-                                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save size={20} />}
-                                    Sync Protocols
-                                </button>
+                                {updating && <Loader2 className="animate-spin text-primary h-5 w-5" />}
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
-                                {allPermissions.map((perm) => (
-                                    <label
-                                        key={perm.code}
-                                        className={`group flex items-start gap-4 p-6 rounded-3xl border-2 transition-all cursor-pointer ${userPermissions.includes(perm.code)
-                                                ? 'bg-shubakar-softBg/50 border-shubakar-primary/20 shadow-inner'
-                                                : 'bg-white border-transparent hover:border-shubakar-softBg hover:bg-shubakar-softBg/20'
-                                            }`}
-                                    >
-                                        <div className="pt-1">
-                                            <div className={`h-7 w-7 rounded-xl border-2 flex items-center justify-center transition-all ${userPermissions.includes(perm.code)
-                                                    ? 'bg-shubakar-primary border-shubakar-primary text-white scale-110 shadow-vibrant'
-                                                    : 'bg-white border-shubakar-border'
-                                                }`}>
-                                                <input
-                                                    type="checkbox"
-                                                    className="hidden"
-                                                    checked={userPermissions.includes(perm.code)}
-                                                    onChange={() => togglePermission(perm.code)}
-                                                />
-                                                {userPermissions.includes(perm.code) && <CheckCircle2 size={16} strokeWidth={3} />}
+                        ) : (
+                            <div className="py-10 text-center flex flex-col items-center">
+                                <ShieldAlert size={48} className="text-muted-foreground/20 mb-4" />
+                                <p className="text-muted-foreground">Select a user to view and edit permissions</p>
+                            </div>
+                        )}
+                    </CardHeader>
+                    {selectedUser && (
+                        <CardContent className="p-0">
+                            <div className="divide-y divide-border/50">
+                                {permissions.map((perm) => {
+                                    const isAssigned = selectedUser.permissions.includes(perm.code);
+                                    return (
+                                        <div key={perm.code} className="p-6 flex items-start justify-between gap-6 hover:bg-muted/30 transition-colors">
+                                            <div className="flex-1 space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-bold text-sm tracking-tight">{perm.name}</h4>
+                                                    <Badge variant="outline" className="text-[10px] py-0 h-4 bg-muted/50">{perm.code}</Badge>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground leading-relaxed italic">
+                                                    {perm.description}
+                                                </p>
                                             </div>
+                                            <Button 
+                                                variant={isAssigned ? "outline" : "default"}
+                                                size="sm"
+                                                disabled={updating || !hasPermission('ASSIGN_PERMISSION')}
+                                                onClick={() => togglePermission(selectedUser, perm.code)}
+                                                className={`min-w-[100px] h-9 transition-all ${
+                                                    isAssigned 
+                                                        ? 'border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/50' 
+                                                        : 'shadow-lg shadow-primary/20'
+                                                }`}
+                                            >
+                                                {isAssigned ? (
+                                                    <><X size={14} className="mr-2" /> Revoke</>
+                                                ) : (
+                                                    <><Check size={14} className="mr-2" /> Assign</>
+                                                )}
+                                            </Button>
                                         </div>
-                                        <div className="space-y-1.5 flex-1">
-                                            <p className="text-sm font-black text-shubakar-text tracking-tight group-hover:text-shubakar-primary transition-colors">{perm.name}</p>
-                                            <p className="text-[11px] text-shubakar-muted font-bold leading-relaxed">{perm.desc}</p>
-                                            <div className="flex items-center gap-1.5 mt-2 opacity-40 group-hover:opacity-100 transition-opacity">
-                                                <Lock size={10} className="text-shubakar-primary" />
-                                                <code className="text-[9px] font-black font-mono tracking-widest text-shubakar-primary uppercase">{perm.code}</code>
-                                            </div>
-                                        </div>
-                                    </label>
-                                ))}
+                                    );
+                                })}
                             </div>
-
-                            <div className="mt-10 p-5 bg-shubakar-primary/5 rounded-2xl border-2 border-dashed border-shubakar-primary/20 flex items-start gap-4 relative z-10">
-                                <Info className="text-shubakar-primary flex-shrink-0 mt-0.5" size={20} />
-                                <p className="text-[11px] text-shubakar-text font-bold leading-relaxed">
-                                    Note: Authorization changes are instantaneous across the Shubakar network. Exercise extreme caution.
-                                </p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="h-[500px] bg-white rounded-[2.5rem] border-2 border-dashed border-shubakar-border flex flex-col items-center justify-center text-shubakar-muted space-y-6">
-                            <div className="w-24 h-24 bg-shubakar-softBg rounded-full flex items-center justify-center text-shubakar-secondary/20 scale-150 grayscale">
-                                <ShieldAlert size={48} />
-                            </div>
-                            <div className="text-center">
-                                <p className="text-lg font-black text-shubakar-text tracking-tight uppercase italic opacity-30">Security Cloud Offline</p>
-                                <p className="text-xs font-bold mt-2">Activate a security principal to begin protocol sync</p>
-                            </div>
+                        </CardContent>
+                    )}
+                    {selectedUser && (
+                        <div className="p-6 bg-muted/20 border-t border-border/50 text-xs text-muted-foreground flex items-center gap-2">
+                            <ShieldAlert size={14} />
+                            Changes are audited and effective immediately upon assignment.
                         </div>
                     )}
-                </div>
+                </Card>
             </div>
         </div>
     );
