@@ -4,7 +4,7 @@ import { useAuthStore } from '../hooks/useAuthStore';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
-import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { Fingerprint, Loader2, AlertCircle } from 'lucide-react';
 
 // This is the functional component for the login screen
 const LoginPage = () => {
@@ -46,7 +46,7 @@ const LoginPage = () => {
             <div className="w-full max-w-md p-4 relative z-10 animate-in fade-in zoom-in duration-500">
                 <div className="flex flex-col items-center mb-8">
                     <div className="bg-primary p-3 rounded-2xl text-primary-foreground shadow-xl shadow-primary/20 mb-4">
-                        <Sparkles size={32} className="fill-current" />
+                        <Fingerprint size={32} className="fill-current" />
                     </div>
                     <h1 className="text-3xl font-bold tracking-tight">Fine-Grained PS</h1>
                     <p className="text-muted-foreground mt-2">Advanced Permission System</p>

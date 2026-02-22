@@ -6,7 +6,7 @@ import {
     Users, 
     ShieldAlert, 
     UserCircle, 
-    Sparkles,
+    Fingerprint,
     Settings,
     HelpCircle,
     History
@@ -46,7 +46,7 @@ const Sidebar = () => {
             <div className="p-6">
                 <div className="flex items-center gap-2.5 px-2">
                     <div className="bg-primary p-2 rounded-xl text-primary-foreground shadow-lg shadow-primary/20">
-                        <Sparkles size={20} className="fill-current" />
+                        <Fingerprint size={20} className="fill-current" />
                     </div>
                     <span className="text-xl font-bold tracking-tight">Fine-Grained PS</span>
                 </div>

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
-import { ShieldAlert, Zap, Lock, Terminal, Loader2, Sparkles, Database } from 'lucide-react';
+import { ShieldAlert, Zap, Lock, Terminal, Loader2, Fingerprint, Database } from 'lucide-react';
 import apiClient from '../api/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';

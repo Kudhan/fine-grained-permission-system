@@ -14,7 +14,7 @@ import {
     Settings,
     HelpCircle,
     UserCircle,
-    Sparkles
+    Fingerprint
 } from 'lucide-react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { cn } from '../../lib/utils';
@@ -63,7 +63,7 @@ const Navbar = () => {
                 {/* Logo - Mobile Only */}
                 <Link to="/" className="lg:hidden flex items-center gap-2">
                     <div className="bg-primary p-1.5 rounded-lg text-primary-foreground">
-                        <Sparkles size={16} className="fill-current" />
+                        <Fingerprint size={16} className="fill-current" />
                     </div>
                 </Link>
 
