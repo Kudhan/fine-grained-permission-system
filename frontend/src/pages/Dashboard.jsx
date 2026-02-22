@@ -140,7 +140,8 @@ const Dashboard = () => {
                                 </Button>
                             </Link>
                             <Link to="/audit-logs" className="w-full sm:w-auto">
-                                <Button variant="outline" className="w-full sm:w-auto h-11 md:h-12 px-8 border-white/20 text-blue hover:bg-white/10 transition-all font-bold rounded-xl md:rounded-2xl gap-2 backdrop-blur-md">
+                                {/* This is the reports button, I made it look exactly like the audit button style */}
+                                <Button className="w-full sm:w-auto h-11 md:h-12 px-8 bg-white text-black hover:bg-primary hover:text-white transition-all duration-300 font-bold rounded-xl md:rounded-2xl gap-2 shadow-xl shadow-white/5">
                                     <Command size={18} />
                                     Reports
                                 </Button>
