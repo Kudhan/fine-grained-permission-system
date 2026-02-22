@@ -33,20 +33,35 @@ class MeView(generics.RetrieveUpdateAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         
         if serializer.is_valid():
-            serializer.save()
+            user = serializer.save()
             
-            # Update employee details if they exist
+            # Ensure employee record exists and is updated
             from apps.employees.models import Employee
-            employee = Employee.objects.filter(email=instance.email).first()
-            if employee:
+            from django.utils import timezone
+            
+            employee, created = Employee.objects.get_or_create(
+                email=user.email,
+                defaults={
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'department': request.data.get('department', 'Unassigned'),
+                    'designation': request.data.get('designation', 'Staff'),
+                    'date_joined': timezone.now().date(),
+                    'phone': request.data.get('phone', '')
+                }
+            )
+            
+            if not created:
                 employee.first_name = request.data.get('first_name', employee.first_name)
                 employee.last_name = request.data.get('last_name', employee.last_name)
                 employee.phone = request.data.get('phone', employee.phone)
                 employee.department = request.data.get('department', employee.department)
                 employee.designation = request.data.get('designation', employee.designation)
                 employee.save()
-                
-            return api_response(data=serializer.data, message="Profile updated successfully")
+            
+            # Re-serialize to get fresh data including employee_details
+            fresh_data = self.get_serializer(user).data
+            return api_response(data=fresh_data, message="Profile updated successfully")
         return api_response(message="Update failed", errors=serializer.errors, status_code=400)
 
 class UserListView(generics.ListAPIView):

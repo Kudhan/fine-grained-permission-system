@@ -50,7 +50,8 @@ export const useAuthStore = create()(
         try {
           const response = await apiClient.patch('/auth/me/', data)
           if (response.data.success) {
-            set({ user: response.data.data, loading: false })
+            // Re-fetch to ensure all calculated fields are synced
+            await get().fetchMe()
             return { success: true }
           } else {
             set({ error: response.data.message, loading: false })

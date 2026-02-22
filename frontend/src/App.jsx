@@ -14,6 +14,7 @@ import HelpPage from './pages/HelpPage';
 
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
+import { Toaster } from 'sonner';
 
 const ProtectedRoute = ({ children }) => {
     const { user, loading, fetchMe } = useAuthStore();
@@ -56,8 +57,10 @@ const Layout = ({ children }) => {
 
 const App = () => {
     return (
-        <Routes>
-            <Route path="/login" element={<LoginPage />} />
+        <>
+            <Toaster position="top-right" richColors />
+            <Routes>
+                <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route
                 path="/*"
@@ -81,6 +84,7 @@ const App = () => {
                 }
             />
         </Routes>
+        </>
     );
 };
 
