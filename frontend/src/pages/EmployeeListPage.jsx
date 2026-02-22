@@ -177,98 +177,154 @@ const EmployeeListPage = () => {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-muted/20 hover:bg-muted/20">
-                                <TableHead className="w-[250px] py-4">Employee</TableHead>
-                                <TableHead>Role & Dept</TableHead>
-                                <TableHead>Contact</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {loading ? (
-                                Array.from({ length: 5 }).map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
-                                        <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
-                                        <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
-                                        <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
-                                        <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
-                                    </TableRow>
-                                ))
-                            ) : employees.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-64 text-center">
-                                        <div className="flex flex-col items-center justify-center space-y-2">
-                                            <Users size={48} className="text-muted-foreground/30" />
-                                            <p className="text-muted-foreground">No employees found.</p>
-                                        </div>
-                                    </TableCell>
+                    {/* Desktop View */}
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-muted/20 hover:bg-muted/20">
+                                    <TableHead className="w-[250px] py-4">Employee</TableHead>
+                                    <TableHead>Role & Dept</TableHead>
+                                    <TableHead>Contact</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ) : (
-                                employees.map((emp) => (
-                                    <TableRow key={emp.id} className="group transition-colors">
-                                        <TableCell className="py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-secondary-foreground font-bold">
-                                                    {emp.first_name[0]}{emp.last_name[0]}
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-foreground">{emp.first_name} {emp.last_name}</p>
-                                                    <p className="text-xs text-muted-foreground">Joined {new Date(emp.date_joined).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
-                                                    <Briefcase size={12} className="text-muted-foreground" />
-                                                    {emp.designation}
-                                                </div>
-                                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                                                    <Building2 size={12} />
-                                                    {emp.department}
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-1.5 text-xs">
-                                                    <Mail size={12} className="text-muted-foreground" />
-                                                    {emp.email}
-                                                </div>
-                                                {emp.phone && (
-                                                    <div className="flex items-center gap-1.5 text-[11px]">
-                                                        <Phone size={12} className="text-muted-foreground" />
-                                                        {emp.phone}
+                            </TableHeader>
+                            <TableBody>
+                                {loading ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
+                                            <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
+                                            <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
+                                            <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
+                                            <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    employees.map((emp) => (
+                                        <TableRow key={emp.id} className="group transition-colors">
+                                            <TableCell className="py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center text-secondary-foreground font-bold">
+                                                        {emp.first_name[0]}{emp.last_name[0]}
                                                     </div>
-                                                )}
+                                                    <div>
+                                                        <p className="font-semibold text-foreground">{emp.first_name} {emp.last_name}</p>
+                                                        <p className="text-xs text-muted-foreground">Joined {new Date(emp.date_joined).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
+                                                        <Briefcase size={12} className="text-muted-foreground" />
+                                                        {emp.designation}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                                        <Building2 size={12} />
+                                                        {emp.department}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-1.5 text-xs">
+                                                        <Mail size={12} className="text-muted-foreground" />
+                                                        {emp.email}
+                                                    </div>
+                                                    {emp.phone && (
+                                                        <div className="flex items-center gap-1.5 text-[11px]">
+                                                            <Phone size={12} className="text-muted-foreground" />
+                                                            {emp.phone}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="success">Active</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {hasPermission('EDIT_EMPLOYEE') && (
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => navigate(`/employees/edit/${emp.id}`)}>
+                                                            <Edit size={16} />
+                                                        </Button>
+                                                    )}
+                                                    {hasPermission('DELETE_EMPLOYEE') && (
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(emp.id)}>
+                                                            <Trash2 size={16} />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* Mobile View */}
+                    <div className="md:hidden divide-y divide-border/20">
+                        {loading ? (
+                            Array.from({ length: 3 }).map((_, i) => (
+                                <div key={i} className="p-4 space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 bg-muted animate-pulse rounded-lg" />
+                                        <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                                    </div>
+                                    <div className="h-3 w-48 bg-muted animate-pulse rounded" />
+                                </div>
+                            ))
+                        ) : employees.length === 0 ? (
+                            <div className="p-10 text-center text-muted-foreground italic text-sm">
+                                No employees found.
+                            </div>
+                        ) : (
+                            employees.map((emp) => (
+                                <div key={emp.id} className="p-4 space-y-4 hover:bg-muted/5 transition-colors">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                                                {emp.first_name[0]}{emp.last_name[0]}
                                             </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="success">Active</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {hasPermission('EDIT_EMPLOYEE') && (
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => navigate(`/employees/edit/${emp.id}`)}>
-                                                        <Edit size={16} />
-                                                    </Button>
-                                                )}
-                                                {hasPermission('DELETE_EMPLOYEE') && (
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(emp.id)}>
-                                                        <Trash2 size={16} />
-                                                    </Button>
-                                                )}
+                                            <div>
+                                                <p className="font-bold text-sm">{emp.first_name} {emp.last_name}</p>
+                                                <p className="text-[10px] text-muted-foreground capitalize">{emp.department} • {emp.designation}</p>
                                             </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                        </div>
+                                        <Badge variant="success" className="text-[9px] px-1.5 py-0">Active</Badge>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-1 gap-2 bg-muted/30 rounded-lg p-3">
+                                        <div className="flex items-center gap-2 text-[10px]">
+                                            <Mail size={12} className="text-muted-foreground" />
+                                            <span className="truncate">{emp.email}</span>
+                                        </div>
+                                        {emp.phone && (
+                                            <div className="flex items-center gap-2 text-[10px]">
+                                                <Phone size={12} className="text-muted-foreground" />
+                                                <span>{emp.phone}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center justify-end gap-2 pt-1">
+                                        {hasPermission('EDIT_EMPLOYEE') && (
+                                            <Button variant="secondary" size="sm" className="h-7 text-[10px] px-3 font-bold" onClick={() => navigate(`/employees/edit/${emp.id}`)}>
+                                                <Edit size={12} className="mr-1.5" /> Edit
+                                            </Button>
+                                        )}
+                                        {hasPermission('DELETE_EMPLOYEE') && (
+                                            <Button variant="ghost" size="sm" className="h-7 text-[10px] px-3 font-bold text-destructive hover:bg-destructive/10" onClick={() => handleDelete(emp.id)}>
+                                                <Trash2 size={12} className="mr-1.5" /> Delete
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </CardContent>
                 {totalPages > 1 && (
                     <div className="bg-muted/30 border-t border-border/50 px-6 py-4 flex items-center justify-between">

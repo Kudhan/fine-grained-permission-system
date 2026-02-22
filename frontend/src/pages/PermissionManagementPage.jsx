@@ -121,7 +121,7 @@ const PermissionManagementPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 {/* User List */}
-                <Card className="lg:col-span-1 border-border/50 shadow-sm sticky top-24">
+                <Card className="lg:col-span-1 border-border/50 shadow-sm h-fit">
                     <CardHeader>
                         <CardTitle className="text-lg">User Directory</CardTitle>
                         <CardDescription>Select a user to manage their rights</CardDescription>

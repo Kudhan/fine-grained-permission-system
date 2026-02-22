@@ -73,14 +73,15 @@ const AuditLogPage = () => {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="overflow-x-auto">
+                    {/* Desktop View */}
+                    <div className="hidden md:block overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/20">
-                                    <TableHead className="w-[200px]">Action</TableHead>
+                                    <TableHead className="w-[180px]">Action</TableHead>
                                     <TableHead>Target User</TableHead>
                                     <TableHead>Permission</TableHead>
-                                    <TableHead>Performed By</TableHead>
+                                    <TableHead>Agent</TableHead>
                                     <TableHead className="text-right">Timestamp</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -95,7 +96,7 @@ const AuditLogPage = () => {
                                     ))
                                 ) : filteredLogs.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground italic">
                                             No audit events found matching your criteria.
                                         </TableCell>
                                     </TableRow>
@@ -109,28 +110,71 @@ const AuditLogPage = () => {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
+                                                    <div className="h-6 w-6 rounded-full bg-secondary flex items-center justify-center overflow-hidden border border-border/50">
                                                         <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${log.target_user_email}`} alt="avatar" />
                                                     </div>
-                                                    <span className="font-medium text-sm">{log.target_user_email}</span>
+                                                    <span className="font-semibold text-xs truncate max-w-[150px]">{log.target_user_email}</span>
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <code className="text-[11px] px-1.5 py-0.5 bg-muted rounded border border-border font-mono text-foreground">
+                                                <code className="text-[10px] px-1.5 py-0.5 bg-muted rounded border border-border font-mono font-bold text-foreground">
                                                     {log.permission_code}
                                                 </code>
                                             </TableCell>
-                                            <TableCell className="text-sm font-medium">
-                                                {log.performed_by_email || 'System'}
+                                            <TableCell className="text-xs font-bold text-muted-foreground truncate max-w-[120px]">
+                                                {log.performed_by_email || 'SYSTEM'}
                                             </TableCell>
-                                            <TableCell className="text-right text-xs text-muted-foreground">
-                                                {format(new Date(log.timestamp), 'MMM dd, yyyy HH:mm:ss')}
+                                            <TableCell className="text-right text-[10px] font-bold text-muted-foreground/60">
+                                                {format(new Date(log.timestamp), 'MMM dd, HH:mm:ss')}
                                             </TableCell>
                                         </TableRow>
                                     ))
                                 )}
                             </TableBody>
                         </Table>
+                    </div>
+
+                    {/* Mobile View */}
+                    <div className="md:hidden divide-y divide-border/20">
+                        {loading ? (
+                            Array(3).fill(0).map((_, i) => (
+                                <div key={i} className="p-4 space-y-3">
+                                    <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                                    <div className="h-3 w-48 bg-muted animate-pulse rounded" />
+                                </div>
+                            ))
+                        ) : filteredLogs.length === 0 ? (
+                            <div className="p-10 text-center text-xs text-muted-foreground italic">
+                                No logs found.
+                            </div>
+                        ) : (
+                            filteredLogs.map((log) => (
+                                <div key={log.id} className="p-4 space-y-3 hover:bg-muted/5 transition-colors">
+                                    <div className="flex items-center justify-between">
+                                        <Badge className={`${getActionColor(log.action)} text-[9px] px-2 py-0`} variant="outline">
+                                            {log.action_display}
+                                        </Badge>
+                                        <span className="text-[9px] font-bold text-muted-foreground/50">
+                                            {format(new Date(log.timestamp), 'HH:mm:ss')}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-6 w-6 rounded-full bg-secondary overflow-hidden border border-border/50">
+                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${log.target_user_email}`} alt="avatar" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-[11px] font-bold truncate leading-none">{log.target_user_email}</p>
+                                            <p className="text-[9px] text-muted-foreground mt-1 truncate">
+                                                Agent: <span className="font-bold text-foreground/70">{log.performed_by_email || 'SYSTEM'}</span>
+                                            </p>
+                                        </div>
+                                        <code className="text-[9px] px-1.5 py-0.5 bg-muted rounded border border-border font-mono font-bold">
+                                            {log.permission_code}
+                                        </code>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </CardContent>
             </Card>

@@ -88,32 +88,32 @@ const Dashboard = () => {
             className="space-y-8 pb-12"
         >
             {/* Intelligence Hero Section */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-[#09090b] text-white p-8 md:p-12 shadow-2xl border border-white/5">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 blur-[120px] rounded-full -mr-64 -mt-64 animate-pulse" />
+            <div className="relative overflow-hidden rounded-[1.5rem] md:rounded-[2.5rem] bg-[#09090b] text-white p-6 md:p-12 shadow-2xl border border-white/5">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 blur-[120px] rounded-full -mr-64 -mt-64 animate-pulse opacity-50 md:opacity-100" />
                 <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-600/10 blur-[100px] rounded-full -ml-32 -mb-32" />
                 
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-                    <div className="space-y-6 max-w-xl text-center md:text-left">
-                        <Badge className="bg-white/10 text-white border-white/20 hover:bg-white/20 transition-colors uppercase tracking-widest text-[10px] py-1 px-3">
+                <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start lg:items-center justify-between gap-8 md:gap-12">
+                    <div className="space-y-4 md:space-y-6 max-w-xl text-center md:text-left">
+                        <Badge className="bg-white/10 text-white border-white/20 hover:bg-white/20 transition-colors uppercase tracking-widest text-[8px] md:text-[10px] py-1 px-3">
                             Executive Intelligence Dashboard
                         </Badge>
-                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-tight italic">
+                        <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight italic">
                             PROTECTING YOUR <span className="text-primary underline decoration-primary/30">CORE.</span>
                         </h1>
-                        <p className="text-white/60 text-lg md:text-xl font-medium leading-relaxed">
-                            Welcome, {user?.first_name}. Your organization is currently operating with <span className="text-white font-bold">{stats.totalPermissions} active protocols</span> across all nodes.
+                        <p className="text-white/60 text-base md:text-lg lg:text-xl font-medium leading-relaxed">
+                            Welcome, {user?.first_name}. Your organization is operating with <span className="text-white font-bold">{stats.totalPermissions} active protocols</span>.
                         </p>
-                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                            <Link to="/audit-logs">
-                                <Button className="h-12 px-8 bg-white text-black hover:bg-primary hover:text-white transition-all duration-300 font-bold rounded-2xl gap-2 shadow-xl shadow-white/5">
+                        <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 pt-2">
+                            <Link to="/audit-logs" className="w-full sm:w-auto">
+                                <Button className="w-full sm:w-auto h-11 md:h-12 px-8 bg-white text-black hover:bg-primary hover:text-white transition-all duration-300 font-bold rounded-xl md:rounded-2xl gap-2 shadow-xl shadow-white/5">
                                     <Zap size={18} fill="currentColor" />
                                     Security Audit
                                 </Button>
                             </Link>
-                            <Link to="/audit-logs">
-                                <Button variant="outline" className="h-12 px-8 border-white/20 text-white hover:bg-white/10 transition-all font-bold rounded-2xl gap-2 backdrop-blur-md">
+                            <Link to="/audit-logs" className="w-full sm:w-auto">
+                                <Button variant="outline" className="w-full sm:w-auto h-11 md:h-12 px-8 border-white/20 text-white hover:bg-white/10 transition-all font-bold rounded-xl md:rounded-2xl gap-2 backdrop-blur-md">
                                     <Command size={18} />
-                                    View Reports
+                                    Reports
                                 </Button>
                             </Link>
                         </div>
@@ -121,15 +121,16 @@ const Dashboard = () => {
 
                     <div className="relative shrink-0 hidden lg:block">
                         {/* Custom SVG Health Visualization */}
-                        <div className="relative h-64 w-64 flex items-center justify-center">
+                        <div className="relative h-48 w-48 md:h-64 md:w-64 flex items-center justify-center">
                             <svg className="h-full w-full rotate-[-90deg]">
                                 <circle
-                                    cx="128"
-                                    cy="128"
-                                    r="110"
+                                    cx="96"
+                                    cy="96"
+                                    r="80"
                                     fill="transparent"
                                     stroke="rgba(255,255,255,0.05)"
-                                    strokeWidth="12"
+                                    strokeWidth="10"
+                                    className="md:cx-128 md:cy-128 md:r-110 md:stroke-width-12"
                                 />
                                 <motion.circle
                                     cx="128"
@@ -146,7 +147,7 @@ const Dashboard = () => {
                                 />
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                                <span className="text-5xl font-black italic tracking-tighter">85%</span>
+                                <span className="text-4xl md:text-5xl font-black italic tracking-tighter">85%</span>
                                 <span className="text-[10px] uppercase font-bold tracking-widest text-white/40 mt-1">Health Score</span>
                             </div>
                         </div>

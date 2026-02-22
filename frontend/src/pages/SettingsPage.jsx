@@ -89,41 +89,41 @@ const SettingsPage = () => {
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <button 
                                 onClick={() => setTheme('light')}
-                                className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+                                className={`flex items-center gap-3 md:gap-4 p-4 rounded-2xl border-2 transition-all ${
                                     theme === 'light' 
                                         ? 'border-primary bg-primary/5 ring-4 ring-primary/10' 
                                         : 'border-border/50 hover:border-border bg-muted/30'
                                 }`}
                             >
-                                <div className="h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center border border-border">
-                                    <Sun size={24} className="text-orange-500" />
+                                <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-white shadow-sm flex items-center justify-center border border-border shrink-0">
+                                    <Sun size={20} className="text-orange-500 md:w-6 md:h-6" />
                                 </div>
-                                <div className="text-left">
-                                    <p className="font-bold text-foreground">Light Mode</p>
-                                    <p className="text-xs text-muted-foreground lowercase">Clean and professional</p>
+                                <div className="text-left min-w-0">
+                                    <p className="font-bold text-sm md:text-base text-foreground truncate">Light Mode</p>
+                                    <p className="text-[10px] md:text-xs text-muted-foreground lowercase truncate">Clean & Pro</p>
                                 </div>
-                                {theme === 'light' && <CheckCircle2 className="ml-auto text-primary" size={20} />}
+                                {theme === 'light' && <CheckCircle2 className="ml-auto text-primary shrink-0" size={18} />}
                             </button>
 
                             <button 
                                 onClick={() => setTheme('dark')}
-                                className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${
+                                className={`flex items-center gap-3 md:gap-4 p-4 rounded-2xl border-2 transition-all ${
                                     theme === 'dark' 
                                         ? 'border-primary bg-primary/5 ring-4 ring-primary/10' 
                                         : 'border-border/50 hover:border-border bg-muted/30'
                                 }`}
                             >
-                                <div className="h-12 w-12 rounded-xl bg-slate-900 shadow-sm flex items-center justify-center border border-white/10">
-                                    <Moon size={24} className="text-indigo-400" />
+                                <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-slate-900 shadow-sm flex items-center justify-center border border-white/10 shrink-0">
+                                    <Moon size={20} className="text-indigo-400 md:w-6 md:h-6" />
                                 </div>
-                                <div className="text-left">
-                                    <p className="font-bold text-foreground">Dark Mode</p>
-                                    <p className="text-xs text-muted-foreground lowercase">Reduced eye strain</p>
+                                <div className="text-left min-w-0">
+                                    <p className="font-bold text-sm md:text-base text-foreground truncate">Dark Mode</p>
+                                    <p className="text-[10px] md:text-xs text-muted-foreground lowercase truncate">Eye Strain Fix</p>
                                 </div>
-                                {theme === 'dark' && <CheckCircle2 className="ml-auto text-primary" size={20} />}
+                                {theme === 'dark' && <CheckCircle2 className="ml-auto text-primary shrink-0" size={18} />}
                             </button>
                         </CardContent>
                     </Card>

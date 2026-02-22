@@ -41,12 +41,12 @@ const ProtectedRoute = ({ children }) => {
 
 const Layout = ({ children }) => {
     return (
-        <div className="min-h-screen bg-background flex">
+        <div className="min-h-screen bg-background flex flex-col lg:flex-row">
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 <Navbar />
-                <main className="flex-1 overflow-y-auto p-6 lg:p-10">
-                    <div className="max-w-6xl mx-auto">
+                <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10">
+                    <div className="max-w-6xl mx-auto w-full">
                         {children}
                     </div>
                 </main>
