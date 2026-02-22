@@ -13,17 +13,41 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     """
     serializer_class = CustomTokenObtainPairSerializer
 
-class MeView(generics.RetrieveAPIView):
+class MeView(generics.RetrieveUpdateAPIView):
     """
-    GET /auth/me/
-    Returns the current user details and their permissions.
+    GET /auth/me/ - Returns current user profile
+    PATCH /auth/me/ - Updates current user profile
     """
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_object(self):
+        return self.request.user
+
     def get(self, request, *args, **kwargs):
         serializer = self.get_serializer(request.user)
         return api_response(data=serializer.data, message="Profile retrieved successfully")
+
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            
+            # Update employee details if they exist
+            from apps.employees.models import Employee
+            employee = Employee.objects.filter(email=instance.email).first()
+            if employee:
+                employee.first_name = request.data.get('first_name', employee.first_name)
+                employee.last_name = request.data.get('last_name', employee.last_name)
+                employee.phone = request.data.get('phone', employee.phone)
+                employee.department = request.data.get('department', employee.department)
+                employee.designation = request.data.get('designation', employee.designation)
+                employee.save()
+                
+            return api_response(data=serializer.data, message="Profile updated successfully")
+        return api_response(message="Update failed", errors=serializer.errors, status_code=400)
 
 class UserListView(generics.ListAPIView):
     """

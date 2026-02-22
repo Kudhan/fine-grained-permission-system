@@ -45,6 +45,24 @@ export const useAuthStore = create()(
         set({ user: null })
       },
       
+      updateProfile: async (data) => {
+        set({ loading: true, error: null })
+        try {
+          const response = await apiClient.patch('/auth/me/', data)
+          if (response.data.success) {
+            set({ user: response.data.data, loading: false })
+            return { success: true }
+          } else {
+            set({ error: response.data.message, loading: false })
+            return { success: false, message: response.data.message }
+          }
+        } catch (error) {
+          const message = error.response?.data?.message || 'Failed to update profile'
+          set({ error: message, loading: false })
+          return { success: false, message }
+        }
+      },
+      
       hasPermission: (code) => {
         const user = get().user
         return user?.permissions?.includes(code)

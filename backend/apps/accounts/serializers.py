@@ -26,13 +26,25 @@ class FunctionSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
+    employee_details = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'permissions', 'created_at', 'updated_at']
+        fields = ['id', 'email', 'first_name', 'last_name', 'permissions', 'employee_details', 'created_at', 'updated_at']
 
     def get_permissions(self, obj):
         return obj.functions.values_list('code', flat=True)
+
+    def get_employee_details(self, obj):
+        from apps.employees.models import Employee
+        employee = Employee.objects.filter(email=obj.email).first()
+        if employee:
+            return {
+                "phone": employee.phone,
+                "department": employee.department,
+                "designation": employee.designation
+            }
+        return None
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
