@@ -6,6 +6,7 @@ import {
     Search, 
     ChevronDown,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
     const { user, logout } = useAuthStore();
@@ -31,7 +32,7 @@ const Navbar = () => {
 
                 <div className="h-8 w-[1px] bg-border mx-2" />
 
-                <div className="flex items-center gap-3 pl-2 group cursor-pointer">
+                <Link to="/profile" className="flex items-center gap-3 pl-2 group cursor-pointer">
                     <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
                         <img
                             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`}
@@ -45,7 +46,7 @@ const Navbar = () => {
                         </p>
                     </div>
                     <ChevronDown size={14} className="text-muted-foreground group-hover:text-foreground transition-colors" />
-                </div>
+                </Link>
 
                 <div className="h-8 w-[1px] bg-border mx-2" />
                 
