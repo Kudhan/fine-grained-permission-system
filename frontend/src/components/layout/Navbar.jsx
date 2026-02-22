@@ -50,7 +50,7 @@ const Navbar = () => {
     ];
 
     return (
-        <header className="h-16 bg-background/80 backdrop-blur-md sticky top-0 z-50 border-b border-border px-4 md:px-6 flex items-center justify-between">
+        <header className="h-16 bg-card/90 backdrop-blur-lg sticky top-0 z-50 border-b border-border/80 px-4 md:px-6 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-4">
                 {/* Mobile Menu Toggle */}
                 <button 

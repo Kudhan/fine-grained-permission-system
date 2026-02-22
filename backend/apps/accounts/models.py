@@ -9,6 +9,9 @@ class User(AbstractUser):
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     
+    # Avatar custom seed for DiceBear
+    avatar_seed = models.CharField(max_length=255, blank=True, null=True)
+    
     # Custom direct permissions mapping (Function-based)
     functions = models.ManyToManyField(Function, related_name='users', blank=True)
     
