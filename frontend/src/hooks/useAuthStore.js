@@ -64,6 +64,15 @@ export const useAuthStore = create()(
         }
       },
       
+      setTheme: (theme) => {
+        set({ theme })
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+      },
+      
       hasPermission: (code) => {
         const user = get().user
         return user?.permissions?.includes(code)
@@ -71,7 +80,10 @@ export const useAuthStore = create()(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user }),
+      partialize: (state) => ({ 
+        user: state.user,
+        theme: state.theme 
+      }),
     }
   )
 )

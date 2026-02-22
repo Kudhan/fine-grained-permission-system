@@ -1,6 +1,11 @@
 from rest_framework import generics, permissions, filters
 from rest_framework.response import Response
-from .serializers import UserSerializer, UserRegistrationSerializer, CustomTokenObtainPairSerializer
+from .serializers import (
+    UserSerializer,
+    UserRegistrationSerializer,
+    CustomTokenObtainPairSerializer,
+    ChangePasswordSerializer
+)
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.core.utils import api_response
 from apps.permissions.permissions import HasPermission
@@ -31,14 +36,14 @@ class MeView(generics.RetrieveUpdateAPIView):
     def patch(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
-        
+
         if serializer.is_valid():
             user = serializer.save()
-            
+
             # Ensure employee record exists and is updated
             from apps.employees.models import Employee
             from django.utils import timezone
-            
+
             employee, created = Employee.objects.get_or_create(
                 email=user.email,
                 defaults={
@@ -50,7 +55,7 @@ class MeView(generics.RetrieveUpdateAPIView):
                     'phone': request.data.get('phone', '')
                 }
             )
-            
+
             if not created:
                 employee.first_name = request.data.get('first_name', employee.first_name)
                 employee.last_name = request.data.get('last_name', employee.last_name)
@@ -58,11 +63,45 @@ class MeView(generics.RetrieveUpdateAPIView):
                 employee.department = request.data.get('department', employee.department)
                 employee.designation = request.data.get('designation', employee.designation)
                 employee.save()
-            
+
             # Re-serialize to get fresh data including employee_details
             fresh_data = self.get_serializer(user).data
             return api_response(data=fresh_data, message="Profile updated successfully")
         return api_response(message="Update failed", errors=serializer.errors, status_code=400)
+
+class ChangePasswordView(generics.UpdateAPIView):
+    """
+    PATCH /auth/change-password/
+    Allows user to change their password.
+    """
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            # Check old password
+            if not self.object.check_password(serializer.data.get("old_password")):
+                return api_response(
+                    message="Wrong password",
+                    errors={"old_password": ["Wrong password."]},
+                    status_code=400
+                )
+
+            self.object.set_password(serializer.data.get("new_password"))
+            self.object.save()
+            return api_response(message="Password updated successfully")
+
+        return api_response(
+            message="Password update failed",
+            errors=serializer.errors,
+            status_code=400
+        )
 
 from rest_framework.pagination import PageNumberPagination
 

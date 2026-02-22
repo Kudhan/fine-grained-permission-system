@@ -56,6 +56,16 @@ const Layout = ({ children }) => {
 };
 
 const App = () => {
+    const { theme } = useAuthStore();
+
+    useEffect(() => {
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [theme]);
+
     return (
         <>
             <Toaster position="top-right" richColors />
