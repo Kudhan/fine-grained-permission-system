@@ -133,3 +133,62 @@ class RegisterView(generics.CreateAPIView):
     """
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
+
+from rest_framework.views import APIView
+from apps.permissions.models import Function
+
+class SystemGenesisView(APIView):
+    """
+    POST /auth/genesis/
+    Critical bootstrap endpoint. Only works if NO superusers exist.
+    Creates the first user, marks as superuser, and grants ALL permissions.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        if User.objects.filter(is_superuser=True).exists():
+            return api_response(
+                message="System Intelligence already online. Genesis protocol is locked.",
+                status_code=403
+            )
+
+        email = request.data.get('email')
+        password = request.data.get('password')
+        first_name = request.data.get('first_name', 'System')
+        last_name = request.data.get('last_name', 'Admin')
+
+        if not email or not password:
+            return api_response(message="Incomplete credentials.", status_code=400)
+
+        # 1. Create the User
+        user = User.objects.create_superuser(
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+
+        # 2. Seed permissions if they don't exist
+        perms_to_seed = [
+            {'code': 'CREATE_EMPLOYEE', 'name': 'Create Employee', 'description': 'Allows creating new employee records'},
+            {'code': 'EDIT_EMPLOYEE', 'name': 'Edit Employee', 'description': 'Allows editing existing employee records'},
+            {'code': 'DELETE_EMPLOYEE', 'name': 'Delete Employee', 'description': 'Allows deleting employee records'},
+            {'code': 'VIEW_EMPLOYEE', 'name': 'View Employees', 'description': 'Allows viewing the list of employees'},
+            {'code': 'VIEW_SELF', 'name': 'View Self', 'description': 'Allows viewing own profile details'},
+            {'code': 'ASSIGN_PERMISSION', 'name': 'Assign Permission', 'description': 'Allows assigning permissions to other users'},
+        ]
+
+        assigned_perms = []
+        for p in perms_to_seed:
+            obj, _ = Function.objects.get_or_create(code=p['code'], defaults={'name': p['name'], 'description': p['description']})
+            user.functions.add(obj)
+            assigned_perms.append(p['code'])
+
+        return api_response(
+            data={
+                "id": user.id,
+                "email": user.email,
+                "permissions_granted": assigned_perms
+            },
+            message="Genesis complete. Master Principal identity created with full structural authority."
+        )

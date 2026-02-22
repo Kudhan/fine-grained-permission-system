@@ -11,6 +11,7 @@ import ProfilePage from './pages/ProfilePage';
 import AuditLogPage from './pages/AuditLogPage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
+import GenesisPage from './pages/GenesisPage';
 
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
@@ -72,6 +73,7 @@ const App = () => {
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/genesis" element={<GenesisPage />} />
             <Route
                 path="/*"
                 element={

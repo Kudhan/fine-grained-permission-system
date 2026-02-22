@@ -6,7 +6,8 @@ from apps.accounts.views import (
     RegisterView, 
     CustomTokenObtainPairView, 
     UserListView,
-    ChangePasswordView
+    ChangePasswordView,
+    SystemGenesisView
 )
 from apps.permissions.views import AssignPermissionView, RemovePermissionView
 
@@ -20,6 +21,7 @@ urlpatterns = [
     path('auth/me/', MeView.as_view(), name='auth_me'),
     path('auth/users/', UserListView.as_view(), name='user_list'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='auth_change_password'),
+    path('auth/genesis/', SystemGenesisView.as_view(), name='auth_genesis'),
     
     # Permission Endpoints
     path('permissions/assign/', AssignPermissionView.as_view(), name='permission_assign'),
