@@ -16,5 +16,9 @@ class HasPermission(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
             
+        # Superusers bypass granular permission checks
+        if request.user.is_superuser:
+            return True
+
         # Check if the user has the required permission code
         return request.user.functions.filter(code=self.required_code.upper()).exists()

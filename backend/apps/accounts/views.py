@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, filters
 from rest_framework.response import Response
 from .serializers import UserSerializer, UserRegistrationSerializer, CustomTokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -64,19 +64,28 @@ class MeView(generics.RetrieveUpdateAPIView):
             return api_response(data=fresh_data, message="Profile updated successfully")
         return api_response(message="Update failed", errors=serializer.errors, status_code=400)
 
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 class UserListView(generics.ListAPIView):
     """
-    GET /auth/users/ (Wait, I'll put it in auth for now as there's no accounts/ urls)
-    Lists all users in the system.
+    Lists all users in the system with search and pagination.
     """
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
+    pagination_class = StandardResultsPagination
     permission_classes = [HasPermission('ASSIGN_PERMISSION')]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['first_name', 'last_name', 'email']
+    ordering_fields = ['first_name', 'last_name', 'email', 'date_joined']
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return api_response(data=serializer.data, message="Users retrieved successfully")
+        response = super().list(request, *args, **kwargs)
+        return api_response(data=response.data, message="Users retrieved successfully")
 
 class RegisterView(generics.CreateAPIView):
     """

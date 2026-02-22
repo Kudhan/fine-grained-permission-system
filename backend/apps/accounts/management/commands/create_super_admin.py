@@ -37,5 +37,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("No functions found in database. Run 'python manage.py seed_permissions' first."))
             return
 
+        user.functions.set(all_functions)
         self.stdout.write(self.style.SUCCESS(f"Assigned all ({all_functions.count()}) permissions to {email}"))
         self.stdout.write(self.style.SUCCESS(f"CREDENTIALS: Email: {email} | Password: {password}"))

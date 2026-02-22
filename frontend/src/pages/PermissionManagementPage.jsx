@@ -16,6 +16,7 @@ import {
     ShieldAlert, 
     User, 
     ChevronRight,
+    ChevronLeft,
     Loader2,
     Check,
     X
@@ -36,15 +37,23 @@ const PermissionManagementPage = () => {
     ]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
     const [selectedUser, setSelectedUser] = useState(null);
     const [updating, setUpdating] = useState(false);
+    const pageSize = 5;
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (page = 1, searchQuery = search) => {
         setLoading(true);
         try {
-            // Fetch all users for permission management
-            const response = await apiClient.get('/auth/users/'); 
-            setUsers(response.data.data); 
+            const response = await apiClient.get(`/auth/users/?page=${page}&search=${searchQuery}`);
+            if (response.data.data.results) {
+                setUsers(response.data.data.results);
+                setTotalCount(response.data.data.count);
+            } else {
+                setUsers(response.data.data);
+                setTotalCount(response.data.data.length);
+            }
         } catch (err) {
             toast.error("Failed to load users");
         } finally {
@@ -53,8 +62,16 @@ const PermissionManagementPage = () => {
     };
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        const timer = setTimeout(() => {
+            fetchUsers(1, search);
+            setCurrentPage(1);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    useEffect(() => {
+        fetchUsers(currentPage, search);
+    }, [currentPage]);
 
     const togglePermission = async (user, permCode) => {
         if (!hasPermission('ASSIGN_PERMISSION')) {
@@ -72,7 +89,11 @@ const PermissionManagementPage = () => {
                 permission_codes: [permCode]
             });
             toast.success(isAssigned ? "Permission revoked" : "Permission granted");
-            fetchUsers();
+            
+            // Refresh the current page to get updated user data
+            await fetchUsers(currentPage, search);
+            
+            // Update selected user local state if necessary
             if (selectedUser?.id === user.id) {
                 const updatedUser = { ...user };
                 if (isAssigned) {
@@ -88,6 +109,8 @@ const PermissionManagementPage = () => {
             setUpdating(false);
         }
     };
+
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -115,6 +138,11 @@ const PermissionManagementPage = () => {
                     <CardContent className="px-2 pt-0 max-h-[500px] overflow-y-auto">
                         {loading ? (
                             <div className="p-4 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+                        ) : users.length === 0 ? (
+                            <div className="py-10 text-center flex flex-col items-center justify-center">
+                                <User size={32} className="text-muted-foreground/20 mb-2" />
+                                <p className="text-xs text-muted-foreground font-medium">No users found</p>
+                            </div>
                         ) : users.map(u => (
                             <div 
                                 key={u.id}
@@ -134,11 +162,36 @@ const PermissionManagementPage = () => {
                                         <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
                                     </div>
                                 </div>
-                                <ChevronRight size={16} className={`${selectedUser?.id === u.id ? 'text-primary' : 'text-muted-foreground/30'}`} />
-                            </div>
-                        ))}
-                    </CardContent>
-                </Card>
+                            <ChevronRight size={16} className={`${selectedUser?.id === u.id ? 'text-primary' : 'text-muted-foreground/30'}`} />
+                        </div>
+                    ))}
+                    {!loading && totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-4 pb-2 px-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={currentPage === 1 || loading}
+                                onClick={() => setCurrentPage(p => p - 1)}
+                            >
+                                <ChevronLeft size={16} />
+                            </Button>
+                            <span className="text-[10px] font-medium text-muted-foreground">
+                                {currentPage} / {totalPages}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                disabled={currentPage === totalPages || loading}
+                                onClick={() => setCurrentPage(p => p + 1)}
+                            >
+                                <ChevronRight size={16} />
+                            </Button>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
                 {/* Permission Matrix */}
                 <Card className="lg:col-span-2 border-border/50 shadow-xl min-h-[500px]">
