@@ -77,21 +77,23 @@ const EmployeeListPage = () => {
         }
 
         const headers = ["ID", "First Name", "Last Name", "Email", "Phone", "Department", "Designation", "Date Joined"];
-        const csvContent = [
+        const csvRows = [
             headers.join(","),
             ...employees.map(emp => [
                 emp.id,
-                `"${emp.first_name}"`,
-                `"${emp.last_name}"`,
-                emp.email,
-                emp.phone || "N/A",
-                `"${emp.department}"`,
-                `"${emp.designation}"`,
-                emp.date_joined
+                `"${emp.first_name.replace(/"/g, '""')}"`,
+                `"${emp.last_name.replace(/"/g, '""')}"`,
+                `"${emp.email}"`,
+                `"${emp.phone || 'N/A'}"`,
+                `"${emp.department.replace(/"/g, '""')}"`,
+                `"${emp.designation.replace(/"/g, '""')}"`,
+                `"${new Date(emp.date_joined).toLocaleDateString()}"`
             ].join(","))
-        ].join("\n");
+        ];
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const csvContent = csvRows.join("\n");
+        const BOM = '\uFEFF'; // Add UTF-8 BOM for Excel
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.setAttribute("href", url);
