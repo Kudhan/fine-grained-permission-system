@@ -12,6 +12,7 @@ import AuditLogPage from './pages/AuditLogPage';
 import SettingsPage from './pages/SettingsPage';
 import HelpPage from './pages/HelpPage';
 import GenesisPage from './pages/GenesisPage';
+import LandingPage from './pages/LandingPage';
 
 import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
@@ -38,6 +39,20 @@ const ProtectedRoute = ({ children }) => {
     if (!user && !localStorage.getItem('access_token')) return <Navigate to="/login" />;
     
     return children;
+};
+
+// This helps us decide if we show the Landing Page or the Dashboard
+const HomeRoute = () => {
+    const { user } = useAuthStore();
+    const token = localStorage.getItem('access_token');
+    
+    // If the person is already logged in, send them to the dashboard
+    if (user || token) {
+        return <Navigate to="/dashboard" />;
+    }
+    
+    // Otherwise show the landing page
+    return <LandingPage />;
 };
 
 const Layout = ({ children }) => {
@@ -71,9 +86,10 @@ const App = () => {
         <>
             <Toaster position="top-right" richColors />
             <Routes>
+                <Route path="/" element={<HomeRoute />} />
                 <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/genesis" element={<GenesisPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/genesis" element={<GenesisPage />} />
             <Route
                 path="/*"
                 element={
@@ -89,7 +105,6 @@ const App = () => {
                                 <Route path="/audit-logs" element={<AuditLogPage />} />
                                 <Route path="/settings" element={<SettingsPage />} />
                                 <Route path="/help" element={<HelpPage />} />
-                                <Route path="/" element={<Navigate to="/dashboard" />} />
                             </Routes>
                         </Layout>
                     </ProtectedRoute>
