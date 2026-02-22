@@ -29,6 +29,8 @@ function PermissionManagementPage() {
     // These are from our auth store
     const auth = useAuthStore();
     
+    // System API base URL
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     // State for users list
     const [usersList, setUsersList] = useState([]);
     
@@ -64,7 +66,7 @@ function PermissionManagementPage() {
         
         try {
             // Build the URL with query params manually
-            const url = 'http://localhost:8000/auth/users/?page=' + pageNumber + '&search=' + searchText;
+            const url = apiBaseUrl + '/auth/users/?page=' + pageNumber + '&search=' + searchText;
             
             const response = await axios.get(url, {
                 headers: {
@@ -131,9 +133,9 @@ function PermissionManagementPage() {
         }
 
         // Decide which API to call
-        let apiLink = 'http://localhost:8000/permissions/assign/';
+        let apiLink = apiBaseUrl + '/permissions/assign/';
         if (userHasIt === true) {
-            apiLink = 'http://localhost:8000/permissions/remove/';
+            apiLink = apiBaseUrl + '/permissions/remove/';
         }
         
         setIsUpdatingNow(true);

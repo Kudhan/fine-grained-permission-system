@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import axios from 'axios'
+ 
+// We define our system's base URL here for all API calls
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // We define our store for authentication here
 export const useAuthStore = create()(
@@ -23,7 +26,7 @@ export const useAuthStore = create()(
         
         try {
           // We call the login API
-          const response = await axios.post('http://localhost:8000/auth/login/', { 
+          const response = await axios.post(apiBaseUrl + '/auth/login/', { 
             email: email, 
             password: password 
           });
@@ -37,7 +40,7 @@ export const useAuthStore = create()(
           localStorage.setItem('refresh_token', refreshToken);
           
           // Now fetch the user data
-          const meResponse = await axios.get('http://localhost:8000/auth/me/', {
+          const meResponse = await axios.get(apiBaseUrl + '/auth/me/', {
             headers: {
               'Authorization': 'Bearer ' + accessToken
             }
@@ -74,7 +77,7 @@ export const useAuthStore = create()(
         }
         
         try {
-          const response = await axios.get('http://localhost:8000/auth/me/', {
+          const response = await axios.get(apiBaseUrl + '/auth/me/', {
             headers: {
               'Authorization': 'Bearer ' + token
             }
@@ -105,7 +108,7 @@ export const useAuthStore = create()(
         const token = localStorage.getItem('access_token');
         
         try {
-          const response = await axios.patch('http://localhost:8000/auth/me/', data, {
+          const response = await axios.patch(apiBaseUrl + '/auth/me/', data, {
             headers: {
               'Authorization': 'Bearer ' + token
             }
@@ -113,7 +116,7 @@ export const useAuthStore = create()(
           
           if (response.data.success === true) {
             // Updated successfully, now refresh the data
-            const refreshResponse = await axios.get('http://localhost:8000/auth/me/', {
+            const refreshResponse = await axios.get(apiBaseUrl + '/auth/me/', {
               headers: {
                 'Authorization': 'Bearer ' + token
               }

@@ -30,6 +30,8 @@ const Dashboard = () => {
     const authObject = useAuthStore();
     const user = authObject.user;
     
+    // The base URL for our API
+    const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
     // State to hold our statistics numbers
     const [employeeCount, setEmployeeCount] = useState(0);
     const [permCount, setPermCount] = useState(0);
@@ -50,7 +52,7 @@ const Dashboard = () => {
             const canSeeEmployees = authObject.hasPermission('VIEW_EMPLOYEE');
             if (canSeeEmployees === true) {
                 try {
-                    const empResponse = await axios.get('http://localhost:8000/employees/', {
+                    const empResponse = await axios.get(apiBaseUrl + '/employees/', {
                         headers: { 'Authorization': 'Bearer ' + myToken }
                     });
                     // We check common response structures
@@ -67,7 +69,7 @@ const Dashboard = () => {
             const isManager = authObject.hasPermission('ASSIGN_PERMISSION');
             if (isManager === true) {
                 try {
-                    const auditResponse = await axios.get('http://localhost:8000/audit/logs/', {
+                    const auditResponse = await axios.get(apiBaseUrl + '/audit/logs/', {
                         headers: { 'Authorization': 'Bearer ' + myToken }
                     });
                     if (auditResponse.data && auditResponse.data.data) {
