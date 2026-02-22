@@ -70,6 +70,39 @@ const EmployeeListPage = () => {
         emp.department.toLowerCase().includes(search.toLowerCase())
     );
 
+    const handleExport = () => {
+        if (employees.length === 0) {
+            toast.error("No employees to export");
+            return;
+        }
+
+        const headers = ["ID", "First Name", "Last Name", "Email", "Phone", "Department", "Designation", "Date Joined"];
+        const csvContent = [
+            headers.join(","),
+            ...employees.map(emp => [
+                emp.id,
+                `"${emp.first_name}"`,
+                `"${emp.last_name}"`,
+                emp.email,
+                emp.phone || "N/A",
+                `"${emp.department}"`,
+                `"${emp.designation}"`,
+                emp.date_joined
+            ].join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `employees_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Employees exported successfully");
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -98,7 +131,12 @@ const EmployeeListPage = () => {
                             />
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" className="gap-2">
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="gap-2"
+                                onClick={handleExport}
+                            >
                                 <Download size={14} />
                                 Export
                             </Button>
