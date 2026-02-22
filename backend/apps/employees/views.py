@@ -1,4 +1,4 @@
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets, generics, status, filters
 from rest_framework.decorators import action
 from .models import Employee
 from .serializers import EmployeeSerializer
@@ -12,6 +12,10 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     """
     queryset = Employee.objects.all().select_related('created_by')
     serializer_class = EmployeeSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['first_name', 'last_name', 'email', 'department', 'designation']
+    ordering_fields = ['created_at', 'first_name', 'last_name', 'date_joined']
+    ordering = ['-created_at']
 
     def get_permissions(self):
         """

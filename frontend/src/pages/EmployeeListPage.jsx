@@ -23,7 +23,10 @@ import {
     Phone,
     Building2,
     Briefcase,
-    Users
+    Users,
+    ChevronLeft,
+    ChevronRight,
+    Loader2
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
@@ -34,13 +37,23 @@ const EmployeeListPage = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [isExporting, setIsExporting] = useState(false);
     const navigate = useNavigate();
+    const pageSize = 10;
 
-    const fetchEmployees = async () => {
+    const fetchEmployees = async (page = 1, searchQuery = search) => {
         setLoading(true);
         try {
-            const response = await apiClient.get('/employees/');
-            setEmployees(response.data.data.results || response.data.data);
+            const response = await apiClient.get(`/employees/?page=${page}&search=${searchQuery}`);
+            if (response.data.data.results) {
+                setEmployees(response.data.data.results);
+                setTotalCount(response.data.data.count);
+            } else {
+                setEmployees(response.data.data);
+                setTotalCount(response.data.data.length);
+            }
         } catch (err) {
             toast.error("Failed to fetch employees");
         } finally {
@@ -49,61 +62,78 @@ const EmployeeListPage = () => {
     };
 
     useEffect(() => {
-        fetchEmployees();
-    }, []);
+        const timer = setTimeout(() => {
+            fetchEmployees(1, search);
+            setCurrentPage(1);
+        }, 500); // Debounce search
+
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    useEffect(() => {
+        fetchEmployees(currentPage, search);
+    }, [currentPage]);
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this employee?")) {
             try {
                 await apiClient.delete(`/employees/${id}/`);
                 toast.success("Employee deleted successfully");
-                fetchEmployees();
+                fetchEmployees(currentPage, search);
             } catch (err) {
                 toast.error("Delete failed");
             }
         }
     };
 
-    const filteredEmployees = employees.filter(emp => 
-        `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
-        emp.email.toLowerCase().includes(search.toLowerCase()) ||
-        emp.department.toLowerCase().includes(search.toLowerCase())
-    );
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            // Fetch all matching employees for export (no pagination)
+            // Note: If the backend doesn't support disabling pagination, we might need to send a large page_size
+            const response = await apiClient.get(`/employees/?search=${search}&page_size=10000`);
+            const allEmployees = response.data.data.results || response.data.data;
 
-    const handleExport = () => {
-        if (employees.length === 0) {
-            toast.error("No employees to export");
-            return;
+            if (allEmployees.length === 0) {
+                toast.error("No employees to export");
+                return;
+            }
+
+            const headers = ["ID", "First Name", "Last Name", "Email", "Phone", "Department", "Designation", "Date Joined"];
+            const csvRows = [
+                headers.join(","),
+                ...allEmployees.map(emp => [
+                    emp.id,
+                    `"${emp.first_name.replace(/"/g, '""')}"`,
+                    `"${emp.last_name.replace(/"/g, '""')}"`,
+                    `"${emp.email}"`,
+                    `"${emp.phone || 'N/A'}"`,
+                    `"${emp.department.replace(/"/g, '""')}"`,
+                    `"${emp.designation.replace(/"/g, '""')}"`,
+                    `"${new Date(emp.date_joined).toLocaleDateString()}"`
+                ].join(","))
+            ];
+
+            const csvContent = csvRows.join("\n");
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `employees_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            toast.success("Employees exported successfully");
+        } catch (err) {
+            toast.error("Export failed");
+        } finally {
+            setIsExporting(false);
         }
-
-        const headers = ["ID", "First Name", "Last Name", "Email", "Phone", "Department", "Designation", "Date Joined"];
-        const csvRows = [
-            headers.join(","),
-            ...employees.map(emp => [
-                emp.id,
-                `"${emp.first_name.replace(/"/g, '""')}"`,
-                `"${emp.last_name.replace(/"/g, '""')}"`,
-                `"${emp.email}"`,
-                `"${emp.phone || 'N/A'}"`,
-                `"${emp.department.replace(/"/g, '""')}"`,
-                `"${emp.designation.replace(/"/g, '""')}"`,
-                `"${new Date(emp.date_joined).toLocaleDateString()}"`
-            ].join(","))
-        ];
-
-        const csvContent = csvRows.join("\n");
-        const BOM = '\uFEFF'; // Add UTF-8 BOM for Excel
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `employees_export_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success("Employees exported successfully");
     };
+
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -138,9 +168,10 @@ const EmployeeListPage = () => {
                                 size="sm" 
                                 className="gap-2"
                                 onClick={handleExport}
+                                disabled={isExporting}
                             >
-                                <Download size={14} />
-                                Export
+                                {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                                {isExporting ? 'Exporting...' : 'Export'}
                             </Button>
                         </div>
                     </div>
@@ -167,7 +198,7 @@ const EmployeeListPage = () => {
                                         <TableCell><div className="h-10 bg-muted animate-pulse rounded-lg w-full" /></TableCell>
                                     </TableRow>
                                 ))
-                            ) : filteredEmployees.length === 0 ? (
+                            ) : employees.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="h-64 text-center">
                                         <div className="flex flex-col items-center justify-center space-y-2">
@@ -177,7 +208,7 @@ const EmployeeListPage = () => {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredEmployees.map((emp) => (
+                                employees.map((emp) => (
                                     <TableRow key={emp.id} className="group transition-colors">
                                         <TableCell className="py-4">
                                             <div className="flex items-center gap-3">
@@ -239,6 +270,36 @@ const EmployeeListPage = () => {
                         </TableBody>
                     </Table>
                 </CardContent>
+                {totalPages > 1 && (
+                    <div className="bg-muted/30 border-t border-border/50 px-6 py-4 flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                            Showing <span className="font-semibold text-foreground">{((currentPage - 1) * pageSize) + 1}</span> to <span className="font-semibold text-foreground">{Math.min(currentPage * pageSize, totalCount)}</span> of <span className="font-semibold text-foreground">{totalCount}</span> results
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === 1 || loading}
+                                onClick={() => setCurrentPage(p => p - 1)}
+                                className="h-8"
+                            >
+                                <ChevronLeft size={16} className="mr-1" /> Previous
+                            </Button>
+                            <div className="flex items-center gap-1 px-4">
+                                <span className="text-sm font-medium">Page {currentPage} of {totalPages}</span>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === totalPages || loading}
+                                onClick={() => setCurrentPage(p => p + 1)}
+                                className="h-8"
+                            >
+                                Next <ChevronRight size={16} className="ml-1" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
         </div>
     );
