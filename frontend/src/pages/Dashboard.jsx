@@ -309,19 +309,19 @@ const Dashboard = () => {
                             <div className="absolute inset-0 bg-black/20" />
                         </div>
                         <CardContent className="relative px-8 -mt-16 flex-1 flex flex-col">
-                            <div className="flex flex-col items-center mb-8">
-                                <div className="h-32 w-32 rounded-[2.5rem] bg-card p-1 shadow-2xl mb-6 ring-4 ring-background">
+                            <Link to="/profile" className="flex flex-col items-center mb-8 group/profile cursor-pointer">
+                                <div className="h-32 w-32 rounded-[2.5rem] bg-card p-1 shadow-2xl mb-6 ring-4 ring-background group-hover/profile:ring-primary/20 transition-all">
                                     <div className="h-full w-full rounded-[2.2rem] bg-secondary overflow-hidden">
                                          <img
                                             src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`}
                                             alt="avatar"
-                                            className="h-full w-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                                            className="h-full w-full object-cover grayscale group-hover/profile:grayscale-0 transition-all duration-700"
                                         />
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-black tracking-tighter italic">{user?.first_name} {user?.last_name}</h3>
+                                <h3 className="text-2xl font-black tracking-tighter italic group-hover/profile:text-primary transition-colors">{user?.first_name} {user?.last_name}</h3>
                                 <Badge variant="outline" className="mt-2 border-primary/30 text-primary bg-primary/5 uppercase font-black text-[9px] tracking-widest px-3">Master Principal</Badge>
-                            </div>
+                            </Link>
                             
                             <div className="space-y-8 flex-1">
                                 <div className="space-y-4">
