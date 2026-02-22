@@ -21,13 +21,19 @@ import {
     Check,
     X
 } from 'lucide-react';
-import apiClient from '../api/client';
+import axios from 'axios';
 import { toast } from 'sonner';
 
-const PermissionManagementPage = () => {
-    const { hasPermission } = useAuthStore();
-    const [users, setUsers] = useState([]);
-    const [permissions, setPermissions] = useState([
+// This is the functional component for managing permissions
+function PermissionManagementPage() {
+    // These are from our auth store
+    const auth = useAuthStore();
+    
+    // State for users list
+    const [usersList, setUsersList] = useState([]);
+    
+    // State for all permissions we have in the system
+    const [allPerms, setAllPerms] = useState([
         { code: 'CREATE_EMPLOYEE', name: 'Create Employee', description: 'Can add new personnel to the system' },
         { code: 'EDIT_EMPLOYEE', name: 'Edit Employee', description: 'Can modify existing personnel details' },
         { code: 'DELETE_EMPLOYEE', name: 'Delete Employee', description: 'Can remove personnel from the system' },
@@ -35,82 +41,144 @@ const PermissionManagementPage = () => {
         { code: 'VIEW_SELF', name: 'View Self', description: 'Standard access to personal record' },
         { code: 'ASSIGN_PERMISSION', name: 'Assign Permission', description: 'Admin right to manage user functions' }
     ]);
-    const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [updating, setUpdating] = useState(false);
-    const pageSize = 5;
+    
+    // State for page loading
+    const [isPageLoading, setIsPageLoading] = useState(true);
+    // State for the search box
+    const [searchText, setSearchText] = useState('');
+    // Current page number
+    const [pageNumber, setPageNumber] = useState(1);
+    // Total users found
+    const [totalUsers, setTotalUsers] = useState(0);
+    // The user we clicked on
+    const [currentUserSelected, setCurrentUserSelected] = useState(null);
+    // When we are updating a permission
+    const [isUpdatingNow, setIsUpdatingNow] = useState(false);
+    
+    const pageSizeValue = 5;
 
-    const fetchUsers = async (page = 1, searchQuery = search) => {
-        setLoading(true);
+    // This function fetches users from the API
+    const loadUsersData = async () => {
+        setIsPageLoading(true);
+        const token = localStorage.getItem('access_token');
+        
         try {
-            const response = await apiClient.get(`/auth/users/?page=${page}&search=${searchQuery}`);
-            if (response.data.data.results) {
-                setUsers(response.data.data.results);
-                setTotalCount(response.data.data.count);
-            } else {
-                setUsers(response.data.data);
-                setTotalCount(response.data.data.length);
+            // Build the URL with query params manually
+            const url = 'http://localhost:8000/auth/users/?page=' + pageNumber + '&search=' + searchText;
+            
+            const response = await axios.get(url, {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+            
+            // Check if response is successful
+            if (response.data && response.data.results) {
+                setUsersList(response.data.results);
+                setTotalUsers(response.data.count);
+            } else if (response.data && response.data.data) {
+                // Sometimes the structure is different based on our view
+                if (response.data.data.results) {
+                      setUsersList(response.data.data.results);
+                      setTotalUsers(response.data.data.count);
+                } else {
+                      setUsersList(response.data.data);
+                      setTotalUsers(response.data.data.length);
+                }
             }
-        } catch (err) {
+        } catch (error) {
+            console.log("Error loading users:", error);
             toast.error("Failed to load users");
-        } finally {
-            setLoading(false);
         }
-    };
+        
+        setIsPageLoading(false);
+    }
 
+    // When the page number changes, reload
     useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchUsers(1, search);
-            setCurrentPage(1);
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [search]);
+        loadUsersData();
+    }, [pageNumber]);
 
+    // When search text changes, wait a bit then reload
     useEffect(() => {
-        fetchUsers(currentPage, search);
-    }, [currentPage]);
+        const typingTimer = setTimeout(() => {
+            setPageNumber(1);
+            loadUsersData();
+        }, 800);
+        
+        return () => {
+            clearTimeout(typingTimer);
+        }
+    }, [searchText]);
 
-    const togglePermission = async (user, permCode) => {
-        if (!hasPermission('ASSIGN_PERMISSION')) {
-            toast.error("Unauthorized to assign permissions");
+    // This function adds or removes a permission for a user
+    const handlePermissionChange = async (userToChange, permissionToToggle) => {
+        // First check if logged in user is admin
+        const canAssign = auth.hasPermission('ASSIGN_PERMISSION');
+        if (canAssign === false) {
+            toast.error("You are not allowed to do this!");
             return;
         }
 
-        const isAssigned = user.permissions.includes(permCode);
-        const endpoint = isAssigned ? '/permissions/remove/' : '/permissions/assign/';
-        
-        setUpdating(true);
-        try {
-            await apiClient.post(endpoint, {
-                user_id: user.id,
-                permission_codes: [permCode]
-            });
-            toast.success(isAssigned ? "Permission revoked" : "Permission granted");
-            
-            // Refresh the current page to get updated user data
-            await fetchUsers(currentPage, search);
-            
-            // Update selected user local state if necessary
-            if (selectedUser?.id === user.id) {
-                const updatedUser = { ...user };
-                if (isAssigned) {
-                    updatedUser.permissions = updatedUser.permissions.filter(p => p !== permCode);
-                } else {
-                    updatedUser.permissions = [...updatedUser.permissions, permCode];
-                }
-                setSelectedUser(updatedUser);
+        // See if the user already has this permission
+        let userHasIt = false;
+        const userPermissions = userToChange.permissions;
+        for (let i = 0; i < userPermissions.length; i++) {
+            if (userPermissions[i] === permissionToToggle) {
+                userHasIt = true;
+                break;
             }
-        } catch (err) {
-            toast.error("Update failed");
-        } finally {
-            setUpdating(false);
         }
-    };
 
-    const totalPages = Math.ceil(totalCount / pageSize);
+        // Decide which API to call
+        let apiLink = 'http://localhost:8000/permissions/assign/';
+        if (userHasIt === true) {
+            apiLink = 'http://localhost:8000/permissions/remove/';
+        }
+        
+        setIsUpdatingNow(true);
+        const tokenForApi = localStorage.getItem('access_token');
+
+        try {
+            await axios.post(apiLink, {
+                user_id: userToChange.id,
+                permission_codes: [permissionToToggle]
+            }, {
+                headers: {
+                    'Authorization': 'Bearer ' + tokenForApi
+                }
+            });
+            
+            if (userHasIt === true) {
+                toast.success("Permission removed");
+            } else {
+                toast.success("Permission granted");
+            }
+            
+            // Refresh everything after success
+            loadUsersData();
+            
+            // Also update the selected user side view if we are looking at them
+            if (currentUserSelected && currentUserSelected.id === userToChange.id) {
+                // Deep copy to trigger state update
+                const newUser = JSON.parse(JSON.stringify(userToChange));
+                if (userHasIt === true) {
+                    newUser.permissions = newUser.permissions.filter(p => p !== permissionToToggle);
+                } else {
+                    newUser.permissions.push(permissionToToggle);
+                }
+                setCurrentUserSelected(newUser);
+            }
+        } catch (e) {
+            console.log("Permission update error:", e);
+            toast.error("Failed to update");
+        }
+        
+        setIsUpdatingNow(false);
+    }
+
+    // Calculate how many pages we have
+    const totalPagesCount = Math.ceil(totalUsers / pageSizeValue);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -120,7 +188,6 @@ const PermissionManagementPage = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                {/* User List */}
                 <Card className="lg:col-span-1 border-border/50 shadow-sm h-fit">
                     <CardHeader>
                         <CardTitle className="text-lg">User Directory</CardTitle>
@@ -130,97 +197,112 @@ const PermissionManagementPage = () => {
                             <Input 
                                 placeholder="Search users..." 
                                 className="pl-9 h-9 text-xs"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                                value={searchText}
+                                onChange={function(e) { setSearchText(e.target.value); }}
                             />
                         </div>
                     </CardHeader>
                     <CardContent className="px-2 pt-0 max-h-[500px] overflow-y-auto">
-                        {loading ? (
-                            <div className="p-4 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
-                        ) : users.length === 0 ? (
+                        {isPageLoading === true ? (
+                             <div className="p-4 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+                        ) : null}
+
+                        {isPageLoading === false && usersList.length === 0 ? (
                             <div className="py-10 text-center flex flex-col items-center justify-center">
                                 <User size={32} className="text-muted-foreground/20 mb-2" />
                                 <p className="text-xs text-muted-foreground font-medium">No users found</p>
                             </div>
-                        ) : users.map(u => (
-                            <div 
-                                key={u.id}
-                                onClick={() => setSelectedUser(u)}
-                                className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${
-                                    selectedUser?.id === u.id 
-                                        ? 'bg-primary/10 border-primary/20 border ring-1 ring-primary/20' 
-                                        : 'hover:bg-muted/50 border border-transparent'
-                                }`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
-                                        {u.first_name[0]}{u.last_name[0]}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-semibold truncate">{u.first_name} {u.last_name}</p>
-                                        <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
-                                    </div>
-                                </div>
-                            <ChevronRight size={16} className={`${selectedUser?.id === u.id ? 'text-primary' : 'text-muted-foreground/30'}`} />
-                        </div>
-                    ))}
-                    {!loading && totalPages > 1 && (
-                        <div className="flex items-center justify-between mt-4 pb-2 px-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                disabled={currentPage === 1 || loading}
-                                onClick={() => setCurrentPage(p => p - 1)}
-                            >
-                                <ChevronLeft size={16} />
-                            </Button>
-                            <span className="text-[10px] font-medium text-muted-foreground">
-                                {currentPage} / {totalPages}
-                            </span>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                disabled={currentPage === totalPages || loading}
-                                onClick={() => setCurrentPage(p => p + 1)}
-                            >
-                                <ChevronRight size={16} />
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                        ) : null}
 
-                {/* Permission Matrix */}
+                        {usersList.map(function(u) {
+                            return (
+                                <div 
+                                    key={u.id}
+                                    onClick={function() { setCurrentUserSelected(u); }}
+                                    className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${
+                                        currentUserSelected && currentUserSelected.id === u.id 
+                                            ? 'bg-primary/10 border-primary/20 border ring-1 ring-primary/20' 
+                                            : 'hover:bg-muted/50 border border-transparent'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
+                                            {u.first_name[0]}{u.last_name[0]}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold truncate">{u.first_name} {u.last_name}</p>
+                                            <p className="text-[10px] text-muted-foreground truncate">{u.email}</p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={16} className={`${currentUserSelected && currentUserSelected.id === u.id ? 'text-primary' : 'text-muted-foreground/30'}`} />
+                                </div>
+                            );
+                        })}
+
+                        {isPageLoading === false && totalPagesCount > 1 ? (
+                            <div className="flex items-center justify-between mt-4 pb-2 px-1">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    disabled={pageNumber === 1 || isPageLoading}
+                                    onClick={function() { setPageNumber(pageNumber - 1); }}
+                                >
+                                    <ChevronLeft size={16} />
+                                </Button>
+                                <span className="text-[10px] font-medium text-muted-foreground">
+                                    {pageNumber} / {totalPagesCount}
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    disabled={pageNumber === totalPagesCount || isPageLoading}
+                                    onClick={function() { setPageNumber(pageNumber + 1); }}
+                                >
+                                    <ChevronRight size={16} />
+                                </Button>
+                            </div>
+                        ) : null}
+                    </CardContent>
+                </Card>
+
                 <Card className="lg:col-span-2 border-border/50 shadow-xl min-h-[500px]">
                     <CardHeader className="border-b border-border/50 bg-muted/5">
-                        {selectedUser ? (
+                        {currentUserSelected !== null ? (
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                                         <ShieldCheck size={24} />
                                     </div>
                                     <div>
-                                        <CardTitle className="text-xl">{selectedUser.first_name}'s Permissions</CardTitle>
-                                        <CardDescription>Configure granular access functions for this user</CardDescription>
+                                        <CardTitle className="text-xl">{currentUserSelected.first_name}'s Permissions</CardTitle>
+                                        <CardDescription>Configure access for this user</CardDescription>
                                     </div>
                                 </div>
-                                {updating && <Loader2 className="animate-spin text-primary h-5 w-5" />}
+                                {isUpdatingNow === true ? <Loader2 className="animate-spin text-primary h-5 w-5" /> : null}
                             </div>
                         ) : (
                             <div className="py-10 text-center flex flex-col items-center">
                                 <ShieldAlert size={48} className="text-muted-foreground/20 mb-4" />
-                                <p className="text-muted-foreground">Select a user to view and edit permissions</p>
+                                <p className="text-muted-foreground">Please select a user to see permissions</p>
                             </div>
                         )}
                     </CardHeader>
-                    {selectedUser && (
+                    
+                    {currentUserSelected !== null ? (
                         <CardContent className="p-0">
                             <div className="divide-y divide-border/50">
-                                {permissions.map((perm) => {
-                                    const isAssigned = selectedUser.permissions.includes(perm.code);
+                                {allPerms.map(function(perm) {
+                                    // Check if user has this permission code in their list
+                                    let isThisAssigned = false;
+                                    for (let k = 0; k < currentUserSelected.permissions.length; k++) {
+                                        if (currentUserSelected.permissions[k] === perm.code) {
+                                            isThisAssigned = true;
+                                            break;
+                                        }
+                                    }
+
                                     return (
                                         <div key={perm.code} className="p-6 flex items-start justify-between gap-6 hover:bg-muted/30 transition-colors">
                                             <div className="flex-1 space-y-1">
@@ -233,17 +315,17 @@ const PermissionManagementPage = () => {
                                                 </p>
                                             </div>
                                             <Button 
-                                                variant={isAssigned ? "outline" : "default"}
+                                                variant={isThisAssigned ? "outline" : "default"}
                                                 size="sm"
-                                                disabled={updating || !hasPermission('ASSIGN_PERMISSION')}
-                                                onClick={() => togglePermission(selectedUser, perm.code)}
+                                                disabled={isUpdatingNow === true}
+                                                onClick={function() { handlePermissionChange(currentUserSelected, perm.code); }}
                                                 className={`min-w-[100px] h-9 transition-all ${
-                                                    isAssigned 
+                                                    isThisAssigned 
                                                         ? 'border-destructive/20 text-destructive hover:bg-destructive/10 hover:border-destructive/50' 
                                                         : 'shadow-lg shadow-primary/20'
                                                 }`}
                                             >
-                                                {isAssigned ? (
+                                                {isThisAssigned === true ? (
                                                     <><X size={14} className="mr-2" /> Revoke</>
                                                 ) : (
                                                     <><Check size={14} className="mr-2" /> Assign</>
@@ -254,17 +336,18 @@ const PermissionManagementPage = () => {
                                 })}
                             </div>
                         </CardContent>
-                    )}
-                    {selectedUser && (
+                    ) : null}
+                    
+                    {currentUserSelected !== null ? (
                         <div className="p-6 bg-muted/20 border-t border-border/50 text-xs text-muted-foreground flex items-center gap-2">
                             <ShieldAlert size={14} />
-                            Changes are audited and effective immediately upon assignment.
+                            Every change is recorded in our security audit log.
                         </div>
-                    )}
+                    ) : null}
                 </Card>
             </div>
         </div>
     );
-};
+}
 
 export default PermissionManagementPage;

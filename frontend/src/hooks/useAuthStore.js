@@ -1,69 +1,136 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import apiClient from '../api/client'
+import axios from 'axios'
 
+// We define our store for authentication here
 export const useAuthStore = create()(
   persist(
     (set, get) => ({
+      // This holds the user data
       user: null,
+      // This is for the loading spinner
       loading: false,
+      // This is for showing errors
       error: null,
+      // Current theme
+      theme: 'dark',
       
+      // Function to login
       login: async (email, password) => {
-        set({ loading: true, error: null })
+        // Start loading
+        set({ loading: true });
+        set({ error: null });
+        
         try {
-          const response = await apiClient.post('/auth/login/', { email, password })
-          localStorage.setItem('access_token', response.data.access)
-          localStorage.setItem('refresh_token', response.data.refresh)
+          // We call the login API
+          const response = await axios.post('http://localhost:8000/auth/login/', { 
+            email: email, 
+            password: password 
+          });
           
-          await get().fetchMe()
-          return { success: true }
-        } catch (error) {
-          const message = error.response?.data?.detail || 'Invalid credentials'
-          set({ error: message, loading: false })
-          return { success: false, message }
+          // If okay, we get tokens
+          const accessToken = response.data.access;
+          const refreshToken = response.data.refresh;
+          
+          // Store them in local storage
+          localStorage.setItem('access_token', accessToken);
+          localStorage.setItem('refresh_token', refreshToken);
+          
+          // Now fetch the user data
+          const meResponse = await axios.get('http://localhost:8000/auth/me/', {
+            headers: {
+              'Authorization': 'Bearer ' + accessToken
+            }
+          });
+          
+          // Save user to state
+          if (meResponse.data.success === true) {
+            set({ user: meResponse.data.data });
+          }
+          
+          set({ loading: false });
+          return { success: true };
+          
+        } catch (err) {
+          // If error happens
+          console.log("Login error visible in console:", err);
+          let errorMsg = "Invalid credentials";
+          if (err.response && err.response.data && err.response.data.detail) {
+            errorMsg = err.response.data.detail;
+          }
+          set({ error: errorMsg, loading: false });
+          return { success: false, message: errorMsg };
         }
       },
       
+      // Function to get current user data
       fetchMe: async () => {
-        set({ loading: true })
+        set({ loading: true });
+        const token = localStorage.getItem('access_token');
+        
+        if (!token) {
+          set({ user: null, loading: false });
+          return;
+        }
+        
         try {
-          const response = await apiClient.get('/auth/me/')
-          if (response.data.success) {
-            set({ user: response.data.data, loading: false })
+          const response = await axios.get('http://localhost:8000/auth/me/', {
+            headers: {
+              'Authorization': 'Bearer ' + token
+            }
+          });
+          
+          if (response.data.success === true) {
+            set({ user: response.data.data, loading: false });
           } else {
-            set({ user: null, loading: false })
+            set({ user: null, loading: false });
           }
         } catch (error) {
-          set({ user: null, loading: false })
+          console.log("Fetch user error:", error);
+          set({ user: null, loading: false });
         }
       },
       
+      // Function for logout
       logout: () => {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        set({ user: null })
+        // Clear everything
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        set({ user: null });
       },
       
+      // Function for updating profile
       updateProfile: async (data) => {
-        set({ loading: true, error: null })
+        set({ loading: true });
+        const token = localStorage.getItem('access_token');
+        
         try {
-          const response = await apiClient.patch('/auth/me/', data)
-          if (response.data.success) {
-            // Re-fetch to ensure all calculated fields are synced
-            await get().fetchMe()
-            return { success: true }
+          const response = await axios.patch('http://localhost:8000/auth/me/', data, {
+            headers: {
+              'Authorization': 'Bearer ' + token
+            }
+          });
+          
+          if (response.data.success === true) {
+            // Updated successfully, now refresh the data
+            const refreshResponse = await axios.get('http://localhost:8000/auth/me/', {
+              headers: {
+                'Authorization': 'Bearer ' + token
+              }
+            });
+            set({ user: refreshResponse.data.data, loading: false });
+            return { success: true };
           } else {
-            set({ error: response.data.message, loading: false })
-            return { success: false, message: response.data.message }
+            set({ loading: false });
+            return { success: false, message: response.data.message };
           }
         } catch (error) {
-          const message = error.response?.data?.message || 'Failed to update profile'
-          set({ error: message, loading: false })
-          return { success: false, message }
+          set({ loading: false });
+          return { success: false, message: "Update failed" };
         }
       },
       
+      // Change the theme
       setTheme: (newTheme) => {
         set({ theme: newTheme });
         if (newTheme === 'dark') {
@@ -73,9 +140,25 @@ export const useAuthStore = create()(
         }
       },
       
-      hasPermission: (code) => {
-        const user = get().user
-        return user?.permissions?.includes(code)
+      // Helper to check if user has a permission
+      hasPermission: (permCode) => {
+        const currentUser = get().user;
+        if (!currentUser) {
+          return false;
+        }
+        
+        const perms = currentUser.permissions;
+        if (!perms) {
+          return false;
+        }
+        
+        // Loop through permissions to find the code
+        for (let i = 0; i < perms.length; i++) {
+          if (perms[i] === permCode) {
+            return true;
+          }
+        }
+        return false;
       }
     }),
     {

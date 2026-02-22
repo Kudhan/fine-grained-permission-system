@@ -22,108 +22,131 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+// This page shows the personal profile of the user
 const ProfilePage = () => {
-    const { user, updateProfile } = useAuthStore();
-    const [isEditing, setIsEditing] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        department: '',
-        designation: '',
-        avatar_seed: ''
-    });
+    // Get user and update function from our global state
+    const auth = useAuthStore();
+    const user = auth.user;
+    
+    // State to toggle the edit modal
+    const [showEditPopup, setShowEditPopup] = useState(false);
+    // State to show a spinner during save
+    const [isSaving, setIsSaving] = useState(false);
+    
+    // Individual states for the form (more like a beginner)
+    const [inputFirstName, setInputFirstName] = useState('');
+    const [inputLastName, setInputLastName] = useState('');
+    const [inputEmail, setInputEmail] = useState('');
+    const [inputPhone, setInputPhone] = useState('');
+    const [inputDepartment, setInputDepartment] = useState('');
+    const [inputDesignation, setInputDesignation] = useState('');
+    const [inputAvatarSeed, setInputAvatarSeed] = useState('');
 
-    const avatarStyles = [
-        { id: 'avataaars', label: 'Human' },
-        { id: 'bottts', label: 'Robot' },
-        { id: 'pixel-art', label: 'Pixel' },
-        { id: 'identicon', label: 'Abstract' },
-        { id: 'micah', label: 'Artistic' }
+    // Avatar list
+    const myAvatars = [
+        { id: 'avataaars', name: 'Human' },
+        { id: 'bottts', name: 'Robot' },
+        { id: 'pixel-art', name: 'Pixel' },
+        { id: 'identicon', name: 'Abstract' },
+        { id: 'micah', name: 'Artistic' }
     ];
 
+    // Load user data into the form when user changes or modal opens
     useEffect(() => {
         if (user) {
-            setFormData({
-                first_name: user.first_name || '',
-                last_name: user.last_name || '',
-                email: user.email || '',
-                phone: user.employee_details?.phone || '',
-                department: user.employee_details?.department || '',
-                designation: user.employee_details?.designation || '',
-                avatar_seed: user.avatar_seed || user.email || ''
-            });
+            setInputFirstName(user.first_name || '');
+            setInputLastName(user.last_name || '');
+            setInputEmail(user.email || '');
+            
+            // Check nested employee details
+            if (user.employee_details) {
+                setInputPhone(user.employee_details.phone || '');
+                setInputDepartment(user.employee_details.department || '');
+                setInputDesignation(user.employee_details.designation || '');
+            } else {
+                setInputPhone('');
+                setInputDepartment('');
+                setInputDesignation('');
+            }
+            
+            // Set the avatar seed
+            if (user.avatar_seed) {
+                setInputAvatarSeed(user.avatar_seed);
+            } else {
+                setInputAvatarSeed(user.email || '');
+            }
         }
-    }, [user]);
+    }, [user, showEditPopup]);
 
-    const handleUpdate = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        const result = await updateProfile(formData);
-        if (result.success) {
-            toast.success("Profile updated successfully");
-            setIsEditing(false);
+    // Function that runs when saving profile
+    const onSaveProfile = async (event) => {
+        // Prevent page from refreshing
+        event.preventDefault();
+        setIsSaving(true);
+        
+        // Put all data into one object
+        const updatedInfo = {
+            first_name: inputFirstName,
+            last_name: inputLastName,
+            email: inputEmail,
+            phone: inputPhone,
+            department: inputDepartment,
+            designation: inputDesignation,
+            avatar_seed: inputAvatarSeed
+        };
+        
+        // Call the update function
+        const updateResult = await auth.updateProfile(updatedInfo);
+        
+        if (updateResult.success === true) {
+            toast.success("Profile saved!");
+            setShowEditPopup(false);
         } else {
-            toast.error(result.message || "Failed to update profile");
+            toast.error("Profile save failed");
         }
-        setLoading(false);
+        
+        setIsSaving(false);
     };
 
-    const sections = [
-        {
-            title: "Security & Keys",
-            description: "Manage your authentication tokens and security settings.",
-            icon: Shield,
-            items: [
-                { label: "Account Email", value: user?.email, icon: Mail },
-                { label: "Phone Number", value: user?.employee_details?.phone || "Not Set", icon: Smartphone },
-                { label: "Created At", value: user?.created_at ? new Date(user?.created_at).toLocaleDateString() : 'N/A', icon: Calendar },
-            ]
-        },
-        {
-            title: "Employment Context",
-            description: "Details related to your organizational role.",
-            icon: Building2,
-            items: [
-                { label: "Department", value: user?.employee_details?.department || "Not Assigned", icon: MapPin },
-                { label: "Designation", value: user?.employee_details?.designation || "No Title", icon: Briefcase },
-            ]
-        }
-    ];
+    // This handles picking an avatar style
+    const pickAvatar = function(styleId) {
+        // We create a seed by combining style and email
+        const newSeed = styleId + '-' + inputEmail;
+        setInputAvatarSeed(newSeed);
+    }
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
+            {/* Header section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="flex items-center gap-6">
                     <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-purple-600 p-0.5 shadow-2xl">
                         <div className="h-full w-full rounded-[22px] bg-card flex items-center justify-center overflow-hidden">
                             <img
                                 src={
-                                    user?.avatar_seed?.includes('-')
-                                        ? `https://api.dicebear.com/7.x/${user.avatar_seed.split('-')[0]}/svg?seed=${user.avatar_seed.split('-')[1]}`
-                                        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`
+                                    user && user.avatar_seed && user.avatar_seed.indexOf('-') !== -1
+                                        ? "https://api.dicebear.com/7.x/" + user.avatar_seed.split('-')[0] + "/svg?seed=" + user.avatar_seed.split('-')[1]
+                                        : "https://api.dicebear.com/7.x/avataaars/svg?seed=" + (user ? user.email : 'default')
                                 }
-                                alt="avatar"
+                                alt="profile avatar"
                                 className="w-full h-full object-cover"
                             />
                         </div>
                     </div>
                     <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight">{user?.first_name} {user?.last_name}</h1>
+                        <h1 className="text-3xl font-extrabold tracking-tight">{user ? user.first_name : ''} {user ? user.last_name : ''}</h1>
                         <p className="text-muted-foreground flex items-center gap-2 mt-1 font-medium">
                             <Badge variant="success" className="h-5">Active Principal</Badge>
-                            • {user?.email}
+                            • {user ? user.email : ''}
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button variant="outline" className="gap-2">
-                        <Bell size={16} /> Notification Settings
+                        <Bell size={16} /> Notifications
                     </Button>
                     <Button 
-                        onClick={() => setIsEditing(true)}
+                        onClick={() => setShowEditPopup(true)}
                         className="gap-2 shadow-lg shadow-primary/20"
                     >
                         <Settings size={16} /> Edit Profile
@@ -131,10 +154,11 @@ const ProfilePage = () => {
                 </div>
             </div>
 
-            {isEditing && (
+            {/* The Edit Profile Modal */}
+            {showEditPopup === true ? (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
                     <Card className="w-full max-w-2xl border-border/50 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
-                        <form onSubmit={handleUpdate}>
+                        <form onSubmit={onSaveProfile}>
                             <CardHeader className="bg-muted/10 border-b border-border/50">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
@@ -143,190 +167,208 @@ const ProfilePage = () => {
                                         </div>
                                         <div>
                                             <CardTitle>Edit Profile Details</CardTitle>
-                                            <CardDescription>Update your personal and professional information.</CardDescription>
+                                            <CardDescription>Update your personal info here</CardDescription>
                                         </div>
                                     </div>
-                                    <Button variant="ghost" size="icon" type="button" onClick={() => setIsEditing(false)}>
+                                    <Button variant="ghost" size="icon" type="button" onClick={function() { setShowEditPopup(false); }}>
                                         <X size={18} />
                                     </Button>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
                                 <div className="space-y-4">
-                                    <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Identity Protocol (Avatar)</h3>
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Choose Avatar Style</h3>
                                     <div className="grid grid-cols-5 gap-3">
-                                        {avatarStyles.map((style) => (
-                                            <div 
-                                                key={style.id}
-                                                onClick={() => setFormData({...formData, avatar_seed: `${style.id}-${user.email}`})}
-                                                className={`cursor-pointer group relative rounded-2xl border-2 transition-all overflow-hidden aspect-square flex items-center justify-center ${
-                                                    formData.avatar_seed.startsWith(style.id) 
-                                                        ? 'border-primary bg-primary/5 ring-4 ring-primary/10' 
-                                                        : 'border-border/50 hover:border-border bg-muted/30'
-                                                }`}
-                                            >
-                                                <img 
-                                                    src={`https://api.dicebear.com/7.x/${style.id}/svg?seed=${user.email}`} 
-                                                    alt={style.label}
-                                                    className={`w-full h-full object-cover p-1 transition-transform group-hover:scale-110 ${formData.avatar_seed.startsWith(style.id) ? '' : 'grayscale opacity-70'}`}
-                                                />
-                                                <div className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-[8px] text-center text-white font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    {style.label}
+                                        {myAvatars.map(function(item) {
+                                            // Check if this avatar is selected
+                                            let isThisOneActive = inputAvatarSeed.indexOf(item.id) === 0;
+
+                                            return (
+                                                <div 
+                                                    key={item.id}
+                                                    onClick={function() { pickAvatar(item.id); }}
+                                                    className={`cursor-pointer group relative rounded-2xl border-2 transition-all overflow-hidden aspect-square flex items-center justify-center ${
+                                                        isThisOneActive === true 
+                                                            ? 'border-primary bg-primary/5 ring-4 ring-primary/10' 
+                                                            : 'border-border/50 hover:border-border bg-muted/30'
+                                                    }`}
+                                                >
+                                                    <img 
+                                                        src={"https://api.dicebear.com/7.x/" + item.id + "/svg?seed=" + (user ? user.email : 'anon')} 
+                                                        alt={item.name}
+                                                        className={`w-full h-full object-cover p-1 transition-transform group-hover:scale-110 ${isThisOneActive === true ? '' : 'grayscale opacity-70'}`}
+                                                    />
+                                                    <div className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-[8px] text-center text-white font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {item.name}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
                                 <div className="space-y-4 pt-4 border-t border-border/50">
-                                    <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Personal Information</h3>
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Personal Details</h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <label className="text-sm font-semibold">First Name</label>
                                             <Input 
-                                                value={formData.first_name}
-                                                onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                                                placeholder="First Name"
+                                                value={inputFirstName}
+                                                onChange={function(e) { setInputFirstName(e.target.value); }}
                                                 required
                                             />
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-sm font-semibold">Last Name</label>
                                             <Input 
-                                                value={formData.last_name}
-                                                onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                                                placeholder="Last Name"
+                                                value={inputLastName}
+                                                onChange={function(e) { setInputLastName(e.target.value); }}
                                                 required
                                             />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Email Address</label>
+                                            <label className="text-sm font-semibold">Email (Cannot change)</label>
                                             <Input 
-                                                type="email"
-                                                value={formData.email}
+                                                value={inputEmail}
                                                 disabled
                                                 className="bg-muted"
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Phone Number</label>
+                                            <label className="text-sm font-semibold">Phone</label>
                                             <Input 
-                                                value={formData.phone}
-                                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                                placeholder="+1 (555) 000-0000"
+                                                value={inputPhone}
+                                                onChange={function(e) { setInputPhone(e.target.value); }}
                                             />
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4 pt-4 border-t border-border/50">
-                                    <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Employment Context</h3>
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Work Details</h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Department</label>
+                                            <label className="text-sm font-semibold">Dept</label>
                                             <Input 
-                                                value={formData.department}
-                                                onChange={(e) => setFormData({...formData, department: e.target.value})}
-                                                placeholder="e.g. Engineering"
+                                                value={inputDepartment}
+                                                onChange={function(e) { setInputDepartment(e.target.value); }}
                                             />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-sm font-semibold">Designation</label>
+                                            <label className="text-sm font-semibold">Role</label>
                                             <Input 
-                                                value={formData.designation}
-                                                onChange={(e) => setFormData({...formData, designation: e.target.value})}
-                                                placeholder="e.g. Software Engineer"
+                                                value={inputDesignation}
+                                                onChange={function(e) { setInputDesignation(e.target.value); }}
                                             />
                                         </div>
                                     </div>
                                 </div>
                             </CardContent>
                             <CardFooter className="bg-muted/10 border-t border-border/50 p-6 gap-3 justify-end">
-                                <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                                <Button type="submit" disabled={loading} className="gap-2 shadow-lg shadow-primary/20">
-                                    {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                                    Save Changes
+                                <Button type="button" variant="outline" onClick={function() { setShowEditPopup(false); }}>Cancel</Button>
+                                <Button type="submit" disabled={isSaving === true} className="gap-2 shadow-lg shadow-primary/20">
+                                    {isSaving === true ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                                    Save
                                 </Button>
                             </CardFooter>
                         </form>
                     </Card>
                 </div>
-            )}
+            ) : null}
 
+            {/* Sections display */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
-                    {sections.map((section, idx) => (
-                        <Card key={idx} className="border-border/50 shadow-sm overflow-hidden">
-                            <CardHeader className="bg-muted/10 border-b border-border/50">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-background rounded-lg border border-border shadow-sm">
-                                        <section.icon size={18} className="text-primary" />
-                                    </div>
-                                    <div>
-                                        <CardTitle className="text-lg">{section.title}</CardTitle>
-                                        <CardDescription>{section.description}</CardDescription>
-                                    </div>
+                    {/* Security Info Card */}
+                    <Card className="border-border/50 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-muted/10 border-b border-border/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-background rounded-lg border border-border shadow-sm">
+                                    <Shield size={18} className="text-primary" />
                                 </div>
-                            </CardHeader>
-                            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {section.items.map((item, i) => (
-                                    <div key={i} className="flex items-start gap-4">
-                                        <div className="p-2.5 rounded-xl bg-secondary/50 text-muted-foreground">
-                                            <item.icon size={16} />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{item.label}</p>
-                                            <p className="text-sm font-semibold text-foreground mt-0.5">{item.value}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    ))}
+                                <CardTitle className="text-lg">Security & Keys</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="flex items-start gap-4">
+                                <div className="p-2.5 rounded-xl bg-secondary/50 text-muted-foreground"><Mail size={16} /></div>
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Account Email</p>
+                                    <p className="text-sm font-semibold text-foreground mt-0.5">{user ? user.email : ''}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-4">
+                                <div className="p-2.5 rounded-xl bg-secondary/50 text-muted-foreground"><Smartphone size={16} /></div>
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Phone</p>
+                                    <p className="text-sm font-semibold text-foreground mt-0.5">{user && user.employee_details ? user.employee_details.phone : 'Not Set'}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Employment Card */}
+                    <Card className="border-border/50 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-muted/10 border-b border-border/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-background rounded-lg border border-border shadow-sm">
+                                    <Building2 size={18} className="text-primary" />
+                                </div>
+                                <CardTitle className="text-lg">Employment Context</CardTitle>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="flex items-start gap-4">
+                                <div className="p-2.5 rounded-xl bg-secondary/50 text-muted-foreground"><MapPin size={16} /></div>
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Department</p>
+                                    <p className="text-sm font-semibold text-foreground mt-0.5">{user && user.employee_details ? user.employee_details.department : 'None'}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-4">
+                                <div className="p-2.5 rounded-xl bg-secondary/50 text-muted-foreground"><Briefcase size={16} /></div>
+                                <div>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Designation</p>
+                                    <p className="text-sm font-semibold text-foreground mt-0.5">{user && user.employee_details ? user.employee_details.designation : 'None'}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <div className="space-y-8">
+                    {/* Active Permissions Card */}
                     <Card className="border-border/50 shadow-sm">
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
                                 <Key size={18} className="text-primary" /> Active Permissions
                             </CardTitle>
-                            <CardDescription>Your current granular access rights</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {user?.permissions?.map((p, i) => (
-                                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/50">
-                                    <span className="text-xs font-bold tracking-tight">{p}</span>
-                                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                                </div>
-                            ))}
-                            {(!user?.permissions || user.permissions.length === 0) && (
-                                <p className="text-sm text-muted-foreground italic text-center py-4">No active permissions.</p>
-                            )}
+                            {user && user.permissions ? user.permissions.map(function(perm, index) {
+                                return (
+                                    <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/50">
+                                        <span className="text-xs font-bold tracking-tight">{perm}</span>
+                                        <div className="h-1.5 w-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                                    </div>
+                                );
+                            }) : null}
+                            
+                            {(!user || !user.permissions || user.permissions.length === 0) ? (
+                                <p className="text-sm text-muted-foreground italic text-center py-4">No permissions.</p>
+                            ) : null}
                         </CardContent>
-                        <CardFooter className="pt-0">
-                            <p className="text-[10px] text-muted-foreground italic">
-                                Rights are managed by administrators via your security policy.
-                            </p>
-                        </CardFooter>
                     </Card>
 
+                    {/* Security Check Card */}
                     <Card className="bg-primary text-primary-foreground border-none overflow-hidden relative">
-                        <div className="absolute top-0 right-0 p-4 opacity-10">
-                            <Shield size={120} />
-                        </div>
-                        <CardHeader>
-                            <CardTitle>Security Check</CardTitle>
-                            <CardDescription className="text-primary-foreground/70">Last checked: Today</CardDescription>
-                        </CardHeader>
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Shield size={120} /></div>
+                        <CardHeader><CardTitle>Security Check</CardTitle></CardHeader>
                         <CardContent>
-                            <p className="text-sm font-medium">Your account is secured with end-to-end JWT encryption and multi-factor authorization logic.</p>
+                            <p className="text-sm font-medium">Your account is safe with us.</p>
                         </CardContent>
-                        <CardFooter>
-                            <Button variant="secondary" className="w-full font-bold">Verify Identity</Button>
-                        </CardFooter>
                     </Card>
                 </div>
             </div>

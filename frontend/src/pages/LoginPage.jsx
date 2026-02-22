@@ -6,23 +6,40 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import { Sparkles, Loader2, AlertCircle } from 'lucide-react';
 
+// This is the functional component for the login screen
 const LoginPage = () => {
+    // These states store what the user types
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login, loading, error } = useAuthStore();
+    
+    // We get tools from our authentication store
+    const authStore = useAuthStore();
+    
+    // For moving between pages
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const result = await login(email, password);
-        if (result.success) {
+    // This runs when the form is submitted
+    const handleLoginSubmit = async (event) => {
+        // Stop the page from reloading
+        event.preventDefault();
+        
+        console.log("Attempting login for:", email);
+        
+        // Call the login function from the store
+        const loginResponse = await authStore.login(email, password);
+        
+        // If login was a success
+        if (loginResponse.success === true) {
+            console.log("Login success! Redirecting...");
             navigate('/dashboard');
+        } else {
+            console.log("Login failed!");
         }
     };
 
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-background relative overflow-hidden">
-            {/* Background blur effects */}
+            {/* These are just pretty background blobs */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
 
@@ -42,30 +59,34 @@ const LoginPage = () => {
                             Enter your credentials to access your dashboard
                         </CardDescription>
                     </CardHeader>
-                    <form onSubmit={handleSubmit}>
+                    
+                    <form onSubmit={handleLoginSubmit}>
                         <CardContent className="space-y-4">
-                            {error && (
+                            {/* Show error if there is one */}
+                            {authStore.error !== null ? (
                                 <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 border border-destructive/20 animate-in slide-in-from-top-2">
                                     <AlertCircle size={16} />
-                                    {error}
+                                    {authStore.error}
                                 </div>
-                            )}
+                            ) : null}
+
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                <label className="text-sm font-medium">
                                     Email Address
                                 </label>
                                 <Input 
                                     type="email" 
                                     placeholder="name@example.com" 
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={function(e) { setEmail(e.target.value); }}
                                     required
                                     className="bg-background/50 border-border focus:ring-primary h-11"
                                 />
                             </div>
+                            
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium leading-none">
+                                    <label className="text-sm font-medium">
                                         Password
                                     </label>
                                     <button type="button" className="text-xs text-primary hover:underline">
@@ -76,15 +97,16 @@ const LoginPage = () => {
                                     type="password" 
                                     placeholder="••••••••" 
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={function(e) { setPassword(e.target.value); }}
                                     required
                                     className="bg-background/50 border-border focus:ring-primary h-11"
                                 />
                             </div>
                         </CardContent>
+                        
                         <CardFooter className="flex flex-col space-y-4">
-                            <Button type="submit" className="w-full h-11 font-semibold text-base transition-all active:scale-[0.98]" disabled={loading}>
-                                {loading ? (
+                            <Button type="submit" className="w-full h-11 font-semibold text-base transition-all active:scale-[0.98]" disabled={authStore.loading}>
+                                {authStore.loading === true ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Signing in...
