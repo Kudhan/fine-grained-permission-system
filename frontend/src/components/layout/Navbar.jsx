@@ -88,7 +88,11 @@ const Navbar = () => {
                 <Link to="/profile" className="flex items-center gap-2 md:gap-3 pl-1 group cursor-pointer leading-tight">
                     <div className="h-8 w-8 md:h-9 md:w-9 rounded-full bg-secondary flex items-center justify-center overflow-hidden ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
                         <img
-                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`}
+                            src={
+                                user?.avatar_seed?.includes('-')
+                                    ? `https://api.dicebear.com/7.x/${user.avatar_seed.split('-')[0]}/svg?seed=${user.avatar_seed.split('-')[1]}`
+                                    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`
+                            }
                             alt="avatar"
                         />
                     </div>

@@ -32,8 +32,17 @@ const ProfilePage = () => {
         email: '',
         phone: '',
         department: '',
-        designation: ''
+        designation: '',
+        avatar_seed: ''
     });
+
+    const avatarStyles = [
+        { id: 'avataaars', label: 'Human' },
+        { id: 'bottts', label: 'Robot' },
+        { id: 'pixel-art', label: 'Pixel' },
+        { id: 'identicon', label: 'Abstract' },
+        { id: 'micah', label: 'Artistic' }
+    ];
 
     useEffect(() => {
         if (user) {
@@ -43,7 +52,8 @@ const ProfilePage = () => {
                 email: user.email || '',
                 phone: user.employee_details?.phone || '',
                 department: user.employee_details?.department || '',
-                designation: user.employee_details?.designation || ''
+                designation: user.employee_details?.designation || '',
+                avatar_seed: user.avatar_seed || user.email || ''
             });
         }
     }, [user]);
@@ -90,7 +100,11 @@ const ProfilePage = () => {
                     <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-purple-600 p-0.5 shadow-2xl">
                         <div className="h-full w-full rounded-[22px] bg-card flex items-center justify-center overflow-hidden">
                             <img
-                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`}
+                                src={
+                                    user?.avatar_seed?.includes('-')
+                                        ? `https://api.dicebear.com/7.x/${user.avatar_seed.split('-')[0]}/svg?seed=${user.avatar_seed.split('-')[1]}`
+                                        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`
+                                }
                                 alt="avatar"
                                 className="w-full h-full object-cover"
                             />
@@ -139,6 +153,32 @@ const ProfilePage = () => {
                             </CardHeader>
                             <CardContent className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
                                 <div className="space-y-4">
+                                    <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Identity Protocol (Avatar)</h3>
+                                    <div className="grid grid-cols-5 gap-3">
+                                        {avatarStyles.map((style) => (
+                                            <div 
+                                                key={style.id}
+                                                onClick={() => setFormData({...formData, avatar_seed: `${style.id}-${user.email}`})}
+                                                className={`cursor-pointer group relative rounded-2xl border-2 transition-all overflow-hidden aspect-square flex items-center justify-center ${
+                                                    formData.avatar_seed.startsWith(style.id) 
+                                                        ? 'border-primary bg-primary/5 ring-4 ring-primary/10' 
+                                                        : 'border-border/50 hover:border-border bg-muted/30'
+                                                }`}
+                                            >
+                                                <img 
+                                                    src={`https://api.dicebear.com/7.x/${style.id}/svg?seed=${user.email}`} 
+                                                    alt={style.label}
+                                                    className={`w-full h-full object-cover p-1 transition-transform group-hover:scale-110 ${formData.avatar_seed.startsWith(style.id) ? '' : 'grayscale opacity-70'}`}
+                                                />
+                                                <div className="absolute inset-x-0 bottom-0 bg-black/60 py-0.5 text-[8px] text-center text-white font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {style.label}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 pt-4 border-t border-border/50">
                                     <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Personal Information</h3>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">

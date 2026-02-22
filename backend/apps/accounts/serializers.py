@@ -30,7 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'permissions', 'employee_details', 'created_at', 'updated_at']
+        fields = ['id', 'email', 'first_name', 'last_name', 'avatar_seed', 'permissions', 'employee_details', 'created_at', 'updated_at']
 
     def get_permissions(self, obj):
         return obj.functions.values_list('code', flat=True)

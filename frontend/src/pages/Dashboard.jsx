@@ -314,7 +314,11 @@ const Dashboard = () => {
                                 <div className="h-32 w-32 rounded-[2.5rem] bg-card p-1 shadow-2xl mb-6 ring-4 ring-background group-hover/profile:ring-primary/20 transition-all">
                                     <div className="h-full w-full rounded-[2.2rem] bg-secondary overflow-hidden">
                                          <img
-                                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`}
+                                            src={
+                                                user?.avatar_seed?.includes('-')
+                                                    ? `https://api.dicebear.com/7.x/${user.avatar_seed.split('-')[0]}/svg?seed=${user.avatar_seed.split('-')[1]}`
+                                                    : `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`
+                                            }
                                             alt="avatar"
                                             className="h-full w-full object-cover grayscale group-hover/profile:grayscale-0 transition-all duration-700"
                                         />
