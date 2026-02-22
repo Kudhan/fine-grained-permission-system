@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import { 
     LayoutDashboard, 
@@ -80,13 +80,13 @@ const Sidebar = () => {
             </nav>
 
             <div className="p-4 border-t border-border">
-                <div className="bg-muted/50 rounded-xl p-4">
-                    <p className="text-xs font-medium text-foreground">{user?.email}</p>
+                <Link to="/profile" className="block bg-muted/50 hover:bg-muted rounded-xl p-4 transition-colors cursor-pointer group">
+                    <p className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">{user?.email}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Free Plan</p>
                     <div className="mt-3 h-1.5 w-full bg-secondary rounded-full overflow-hidden">
                         <div className="h-full bg-primary w-2/3 rounded-full" />
                     </div>
-                </div>
+                </Link>
             </div>
         </aside>
     );
