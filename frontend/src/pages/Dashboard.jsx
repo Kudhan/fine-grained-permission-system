@@ -73,7 +73,9 @@ const Dashboard = () => {
                         headers: { 'Authorization': 'Bearer ' + myToken }
                     });
                     if (auditResponse.data && auditResponse.data.data) {
-                        const firstEight = auditResponse.data.data.slice(0, 8);
+                        // Handle both paginated and non-paginated for robustness
+                        const logs = auditResponse.data.data.results || auditResponse.data.data;
+                        const firstEight = Array.isArray(logs) ? logs.slice(0, 8) : [];
                         setLogActions(firstEight);
                     }
                 } catch (e2) {

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
-import { Search, History, Filter, User } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Search, History, ChevronLeft, ChevronRight, Hash } from 'lucide-react';
 import apiClient from '../api/client';
 import { format } from 'date-fns';
 
@@ -11,26 +12,43 @@ const AuditLogPage = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const pageSize = 10;
+
+    const fetchLogs = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await apiClient.get('/audit/logs/', {
+                params: {
+                    page: page,
+                    search: searchTerm,
+                    page_size: pageSize
+                }
+            });
+            // Handle both paginated and non-paginated responses for safety
+            if (response.data.data.results) {
+                setLogs(response.data.data.results);
+                setTotalCount(response.data.data.count);
+            } else {
+                setLogs(response.data.data);
+                setTotalCount(response.data.data.length);
+            }
+        } catch (err) {
+            console.error("Failed to fetch audit logs", err);
+        } finally {
+            setLoading(false);
+        }
+    }, [page, searchTerm]);
 
     useEffect(() => {
-        const fetchLogs = async () => {
-            try {
-                const response = await apiClient.get('/audit/logs/');
-                setLogs(response.data.data);
-            } catch (err) {
-                console.error("Failed to fetch audit logs", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchLogs();
-    }, []);
+        const timeoutId = setTimeout(() => {
+            fetchLogs();
+        }, 500); // Debounce search
+        return () => clearTimeout(timeoutId);
+    }, [fetchLogs]);
 
-    const filteredLogs = logs.filter(log => 
-        log.target_user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.action_display.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.permission_code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     const getActionColor = (action) => {
         switch (action) {
@@ -53,10 +71,13 @@ const AuditLogPage = () => {
                     <div className="relative w-full md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                         <Input 
-                            placeholder="Filter by user or action..." 
+                            placeholder="Search by user, action or code..." 
                             className="pl-10"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setPage(1); // Reset to first page on search
+                            }}
                         />
                     </div>
                 </div>
@@ -64,11 +85,17 @@ const AuditLogPage = () => {
 
             <Card className="border-border/50 shadow-xl overflow-hidden">
                 <CardHeader className="bg-muted/30 border-b border-border/50">
-                    <div className="flex items-center gap-2">
-                        <History size={20} className="text-primary" />
-                        <div>
-                            <CardTitle className="text-lg">Event History</CardTitle>
-                            <CardDescription>Cryptographically traceable administrative events</CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <History size={20} className="text-primary" />
+                            <div>
+                                <CardTitle className="text-lg">Event History</CardTitle>
+                                <CardDescription>Cryptographically traceable administrative events</CardDescription>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full border border-primary/20">
+                            <Hash size={14} className="text-primary" />
+                            <span className="text-xs font-bold text-primary">Total Events: {totalCount}</span>
                         </div>
                     </div>
                 </CardHeader>
@@ -94,14 +121,14 @@ const AuditLogPage = () => {
                                             ))}
                                         </TableRow>
                                     ))
-                                ) : filteredLogs.length === 0 ? (
+                                ) : logs.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="h-32 text-center text-muted-foreground italic">
                                             No audit events found matching your criteria.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredLogs.map((log) => (
+                                    logs.map((log) => (
                                         <TableRow key={log.id} className="hover:bg-muted/10 transition-colors">
                                             <TableCell>
                                                 <Badge className={getActionColor(log.action)} variant="outline">
@@ -143,12 +170,12 @@ const AuditLogPage = () => {
                                     <div className="h-3 w-48 bg-muted animate-pulse rounded" />
                                 </div>
                             ))
-                        ) : filteredLogs.length === 0 ? (
+                        ) : logs.length === 0 ? (
                             <div className="p-10 text-center text-xs text-muted-foreground italic">
                                 No logs found.
                             </div>
                         ) : (
-                            filteredLogs.map((log) => (
+                            logs.map((log) => (
                                 <div key={log.id} className="p-4 space-y-3 hover:bg-muted/5 transition-colors">
                                     <div className="flex items-center justify-between">
                                         <Badge className={`${getActionColor(log.action)} text-[9px] px-2 py-0`} variant="outline">
@@ -176,6 +203,57 @@ const AuditLogPage = () => {
                             ))
                         )}
                     </div>
+
+                    {/* Pagination Footer */}
+                    {!loading && totalCount > pageSize && (
+                        <div className="flex items-center justify-between px-6 py-4 bg-muted/20 border-t border-border/50">
+                            <div className="text-xs text-muted-foreground font-medium">
+                                Showing <span className="text-foreground">{(page - 1) * pageSize + 1}</span> to <span className="text-foreground">{Math.min(page * pageSize, totalCount)}</span> of <span className="text-foreground">{totalCount}</span> events
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <ChevronLeft size={16} />
+                                </Button>
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        // Simple pagination logic to show current +/- 2 pages
+                                        let pageNum;
+                                        if (totalPages <= 5) pageNum = i + 1;
+                                        else if (page <= 3) pageNum = i + 1;
+                                        else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                                        else pageNum = page - 2 + i;
+
+                                        return (
+                                            <Button
+                                                key={pageNum}
+                                                variant={page === pageNum ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setPage(pageNum)}
+                                                className="h-8 w-8 p-0 text-xs font-bold"
+                                            >
+                                                {pageNum}
+                                            </Button>
+                                        );
+                                    })}
+                                </div>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <ChevronRight size={16} />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
