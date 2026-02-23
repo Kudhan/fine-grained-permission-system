@@ -164,11 +164,86 @@ To truly test the power of this system, follow these steps:
 
 ---
 
-## 💡 Framework Rationale
+---
 
-- **Why React + Vite?** Instant hot-reloading and modern build optimization.
-- **Why Django + SimpleJWT?** Django's ORM is robust for permission logic, and JWT allows for scaled, stateless clusters.
-- **Why Shadcn/UI?** It provides developer-first, accessible, and beautiful components without the overhead of heavy UI libraries.
+## 🏛️ Backend Architecture Deep-Dive
+
+The backend is engineered for **Atomic Access Control**, moving beyond binary roles to function-level granularity.
+
+### 🧩 Core Applications (`/backend/apps/`)
+
+- **`accounts`**: Custom User model using email as ID. Integrates with DiceBear for biometric avatars.
+- **`permissions`**: The logic engine. Defines `Function` models and the `HasPermission` DRF class.
+- **`employees`**: The main business domain. Every CRUD action is gated by a specific permission code.
+- **`audit`**: Forensic tracing. Records every permission change with `performed_by` and `target_user` context.
+- **`core`**: Shared infrastructure for standardized API responses.
+
+### 🛡️ Security Enforcement
+
+The `HasPermission` class check follows this priority:
+
+1. **Superuser Override**: `is_superuser` bypasses all checks.
+2. **Explicit Grant**: Checks the `user.functions` join table for the specific code required by the view.
+
+### 🧬 The Request Life Cycle
+
+1. **Extraction**: SimpleJWT extracts the `Bearer` token from the request header.
+2. **Validation**: Token signature is verified; `request.user` is populated.
+3. **Routing**: Django routes to the specific View (e.g., `EmployeeViewSet`).
+4. **Permission Logic**: `HasPermission` queries the database for the required code.
+5. **Execution**: If authorized, data is processed via Serializers; Audit Logs are generated for sensitive changes.
+6. **Delivery**: Data is wrapped in the `api_response` format and delivered as JSON.
+
+---
+
+## 🎨 Frontend UI & Logic Deep-Dive
+
+### ⚡ Technical Foundation
+
+- **State**: [Zustand](https://github.com/pmndrs/zustand) for persistent, ultra-fast auth state.
+- **API**: Axios with **Interceptors** for silent JWT rotation (refreshing tokens automatically on 401).
+- **Style**: High-contrast "Executive" design using Tailwind CSS 4.0 and Framer Motion for micro-interactions.
+
+### 🧠 Identity-Aware UI
+
+The frontend doesn't just block pages; it hides individual UI nodes. Using the `hasPermission('CODE')` helper from the auth store, the UI adapts in real-time to the user's authority level.
+
+### 🎨 UI Design Language
+
+- **Industrial Palette**: Centered on "Slate" and "Primary" blue for a high-authority feel.
+- **Bento Geometry**: Large cards with rounded corners (`rounded-[2rem]`) to organize dense security data.
+- **Micro-Animations**: Extensive use of `framer-motion` for smooth layout transitions and hover effects.
+- **Biometric Identity**: Integration with DiceBear API to generate unique visual seeds for every user.
+
+---
+
+## 🔄 System Workflows & Logic Flows
+
+### 1. The "Zero-Trust" New User Journey
+
+- **Registration**: Creates a user with `[]` permissions.
+- **Login**: User sees a "Restricted Access" dashboard until an admin provisions them.
+
+### 2. The Provisioning Loop
+
+- **Admin Action**: An admin uses the "Access Control" page to grant a permission.
+- **Atomic Transaction**: The permission is granted, and an Audit Log is saved simultaneously.
+- **Instant Refresh**: The target user's UI updates on their next action or session refresh.
+
+### 3. The "Invisible" API Shield
+
+When an Access Token expires:
+
+1. `apiClient` catches the `401`.
+2. It silently hits `/auth/refresh/`.
+3. If valid, the original request is **retried** with the new token.
+4. The user experiences zero interruption.
+
+### 4. Deployment & Cloud Readiness
+
+- **Database Agnostic**: Uses `dj-database-url` to handle SQLite in dev and PostgreSQL in production automatically.
+- **Static Asset Shield**: Uses `WhiteNoise` for efficient serving of frontend build assets in cloud environments.
+- **CORS Management**: Pre-configured with restricted CORS headers to ensure backend security.
 
 ---
 

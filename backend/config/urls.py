@@ -10,8 +10,10 @@ from apps.accounts.views import (
     SystemGenesisView
 )
 from apps.permissions.views import AssignPermissionView, RemovePermissionView
+from apps.core.views import api_root_view
 
 urlpatterns = [
+    path('', api_root_view, name='api_root'),
     path('admin/', admin.site.urls),
     
     # Auth Endpoints
