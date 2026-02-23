@@ -110,6 +110,8 @@ Because this is a permission-gated system, you cannot do anything without an acc
 3.  This protocol can only be run **ONCE**. After the first admin is created, this endpoint locks automatically.
 4.  Once created, log in via `http://localhost:5173/login`.
 
+![Genesis Protocol Screen](./genesis.png)
+
 ---
 
 ## 📡 API Documentation Summary
@@ -146,9 +148,13 @@ The backend exposes a clean RESTful interface. All secured endpoints require an 
 ## 🖥️ Frontend Page Walkthrough
 
 1.  **Dashboard**: The command center. Displays quick stats and recent activity.
+    ![Dashboard Interface](./dashboard.png)
 2.  **Employee Directory**: Table view of all personnel with search and sorting.
+    ![Employee Directory](./employees.png)
 3.  **Permission Management**: A specialized UI for admins to toggle granular rights for any user in real-time.
+    ![Permission Management UI](./permissions.png)
 4.  **Audit Logs**: A timestamped list of administrative actions for security compliance.
+    ![Audit Logs View](./audit_logs.png)
 5.  **Profile & Settings**: Manage your own identity, avatar seed, and password.
 
 ---
@@ -177,6 +183,8 @@ The backend is engineered for **Atomic Access Control**, moving beyond binary ro
 - **`employees`**: The main business domain. Every CRUD action is gated by a specific permission code.
 - **`audit`**: Forensic tracing. Records every permission change with `performed_by` and `target_user` context.
 - **`core`**: Shared infrastructure for standardized API responses.
+
+![Django Admin Backend](./django-admin.png)
 
 ### 🛡️ Security Enforcement
 
