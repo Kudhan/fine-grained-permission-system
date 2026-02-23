@@ -1,12 +1,34 @@
-# 📡 Fine-Grained PS: API Documentation v1.0
+# 📡 Fine-Grained Permission System: API Specification v1.1
 
-This document defines the complete REST API interface for the **Fine-Grained Permission System**. Every endpoint follows the standardized `api_response` format and enforces granular function-based authorization.
+This document provides a comprehensive technical reference for the **Fine-Grained Permission System API**.
+
+## 🏗️ Core Principles
+
+### 1. Standard Response Format
+
+All responses (except for special Django Admin or error pages) are wrapped in a standard JSON envelope:
+
+```json
+{
+  "success": boolean,
+  "message": "Human-readable status",
+  "data": { ... } | [ ... ] | null,
+  "errors": { "field": ["error message"] } | null
+}
+```
+
+### 2. Authentication
+
+The API uses **Stateless JWT (JSON Web Tokens)**.
+
+- **Header**: `Authorization: Bearer <your_access_token>`
+- **Token Lifespan**: Access tokens are short-lived; use the Refresh token to get a new one without re-authenticating.
 
 ---
 
 ## 🔐 1. Authentication & Identity
 
-### **Register New Identity**
+### **Register Account**
 
 `POST /auth/register/`
 
@@ -20,138 +42,164 @@ This document defines the complete REST API interface for the **Fine-Grained Per
     "last_name": "Doe"
   }
   ```
-- **Response**: `201 Created`
+- **Success (201)**: Returns user ID and email.
 
-### **Login (Obtain JWT)**
+### **Login (Token Exchange)**
 
 `POST /auth/login/`
 
 - **Access**: Public
-- **Body**:
-  ```json
-  { "email": "admin@fgps.com", "password": "adminfgps" }
-  ```
-- **Response**: `200 OK` (Returns `access` and `refresh` tokens)
+- **Body**: `{ "email": "...", "password": "..." }`
+- **Success (200)**: Returns `access` and `refresh` tokens, plus basic user claims.
 
-### **Refresh Token**
+### **Token Refresh**
 
 `POST /auth/refresh/`
 
-- **Access**: Public (requires valid refresh token)
+- **Access**: Public (Body requires Refresh JWT)
 - **Body**: `{ "refresh": "<refresh_token>" }`
-- **Response**: `200 OK` (Returns new `access` token)
+- **Success (200)**: Returns a fresh `access` token.
 
-### **Get Current Profile & Permissions**
+### **Fetch My Profile**
 
 `GET /auth/me/`
 
 - **Access**: Authenticated
-- **Response**: Returns the user's personal details and their array of granted `functions` (permission codes).
+- **Description**: Returns detailed profile including `permissions` (array of codes) and `employee_details`.
 
-### **Establish Root Identity (Genesis)**
+### **Change Password**
+
+`PATCH /auth/change-password/`
+
+- **Access**: Authenticated
+- **Body**: `{ "old_password": "...", "new_password": "...", "confirm_password": "..." }`
+
+### **System Genesis**
 
 `POST /auth/genesis/`
 
-- **Access**: Internal Protocol
-- **Description**: Creates the first system administrator with full `ASSIGN_PERMISSION` rights.
+- **Access**: Public (Only if system has 0 superusers)
+- **Description**: Bootstraps the system with the first Master Admin.
+- **Body**: `{ "email": "...", "password": "...", "first_name": "...", "last_name": "..." }`
 
 ---
 
-## 🏢 2. Employee Management (Domain)
+## 🏢 2. Employee Records
 
-### **List Employees**
+### **List & Search Employees**
 
 `GET /employees/`
 
-- **Permission**: `VIEW_EMPLOYEE`
-- **Query Params**: `?page=1&search=query`
-- **Response**: Paginated list of all organization personnel.
+- **Access**: Granted via `VIEW_EMPLOYEE`
+- **Query Params**:
+  - `search`: Search across name, email, department, designation.
+  - `ordering`: `-created_at`, `first_name`, etc.
+  - `page`: Pagination page number.
+- **Success (200)**: Paginated list of employees.
 
-### **Create Employee**
+### **Create New Employee**
 
 `POST /employees/`
 
-- **Permission**: `CREATE_EMPLOYEE`
-- **Body**: `first_name`, `last_name`, `email`, `phone`, `department`, `designation`.
+- **Access**: Granted via `CREATE_EMPLOYEE`
+- **Body**:
+  ```json
+  {
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane@company.com",
+    "phone": "+123456789",
+    "department": "Engineering",
+    "designation": "Lead Developer",
+    "date_joined": "2024-01-01"
+  }
+  ```
 
-### **Update Employee**
+### **Update/Patch Employee**
 
 `PATCH /employees/{id}/`
 
-- **Permission**: `EDIT_EMPLOYEE`
-- **Body**: Any partial fields to update.
+- **Access**: Granted via `EDIT_EMPLOYEE`
+- **Body**: Partial update of any employee field.
 
-### **Remove Employee**
+### **Delete Employee**
 
 `DELETE /employees/{id}/`
 
-- **Permission**: `DELETE_EMPLOYEE`
+- **Access**: Granted via `DELETE_EMPLOYEE`
 
-### **View Personal Employee Record**
+### **View Personal Record**
 
 `GET /employees/me/`
 
-- **Permission**: `VIEW_SELF`
-- **Description**: Returns only the employee record linked to the authenticated user.
+- **Access**: Granted via `VIEW_SELF`
+- **Description**: Automatically retrieves the employee record matching the logged-in user's email.
 
 ---
 
-## 🔑 3. Access Control (Permissions)
+## 🔑 3. Access Control (Admin)
 
-### **List User Directory**
+### **List All Users**
 
 `GET /auth/users/`
 
-- **Permission**: `ASSIGN_PERMISSION`
-- **Description**: Returns all user identities for permission auditing and assignment.
+- **Access**: Granted via `ASSIGN_PERMISSION`
+- **Description**: Returns all users in the system to allow admins to select them for permission changes.
 
 ### **Assign Function Codes**
 
 `POST /permissions/assign/`
 
-- **Permission**: `ASSIGN_PERMISSION`
+- **Access**: Granted via `ASSIGN_PERMISSION`
 - **Body**:
   ```json
   {
-    "user_id": 5,
-    "permission_codes": ["CREATE_EMPLOYEE", "VIEW_AUDIT_LOG"]
+    "user_id": 12,
+    "permission_codes": ["CREATE_EMPLOYEE", "DELETE_EMPLOYEE"]
   }
   ```
+- **Audit**: This action automatically triggers multiple Forensic Audit Logs.
 
 ### **Revoke Function Codes**
 
 `POST /permissions/remove/`
 
-- **Permission**: `ASSIGN_PERMISSION`
-- **Body**: Same as Assign.
+- **Access**: Granted via `ASSIGN_PERMISSION`
+- **Body**: (Same schema as Assign)
 
 ---
 
-## 📜 4. Security Audit (Tracing)
+## 📜 4. Forensic Auditing
 
-### **Fetch Audit Logs**
+### **View System Audit Trail**
 
 `GET /audit/logs/`
 
-- **Permission**: `IsAuthenticated` (Recommended: `ASSIGN_PERMISSION`)
-- **Query Params**: `?target_email=user@fgps.com`
-- **Description**: A chronological feed of all permission changes and security events within the system.
+- **Access**: Authenticated (Restricted UI access)
+- **Query Params**:
+  - `search`: Filters by target email or action.
+  - `target_email`: Direct filter for a specific user's history.
+- **Data Model**:
+  - `action`: PERMISSION_ASSIGNED | PERMISSION_REMOVED
+  - `performed_by`: Admin who triggered the change.
+  - `target_user`: User whose permissions were changed.
+  - `permission_code`: The specific function affected.
+  - `timestamp`: Precise clock-time of the event.
 
 ---
 
-## 🏗️ Response Standard
+## 🛠️ Global Status Codes
 
-All endpoints return a wrapper object:
-
-```json
-{
-  "success": true,
-  "message": "Action completed successfully",
-  "data": { ... },
-  "errors": null
-}
-```
+- `200 OK`: Request succeeded.
+- `201 Created`: Resource created.
+- `204 No Content`: Resource deleted successfully.
+- `400 Bad Request`: Validation failed (check `errors` object).
+- `401 Unauthorized`: Token missing or expired.
+- `403 Forbidden`: Authenticated, but missing the required Function Code.
+- `404 Not Found`: Resource does not exist.
+- `500 Server Error`: Unexpected system failure.
 
 ---
 
-**API Base URL**: `http://localhost:8000/` or your production domain.
+**Fine-Grained Permission System © 2026**
+_Authority Defined by Granular Functions._
