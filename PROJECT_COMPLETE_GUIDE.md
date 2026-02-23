@@ -89,6 +89,8 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+> **💡 Pro Tip**: Run `python manage.py seed_data` after migrations to instantly populate the system with 20 employees and a pre-configured Admin account.
+
 ### 3. Frontend Setup
 
 ```bash
@@ -99,6 +101,13 @@ npm install
 # Start development server
 npm run dev
 ```
+
+### 4. Sample Credentials (If Seeded)
+
+If you used the `seed_data` command, you can use these to jump straight into the evaluation:
+
+- **Email**: `admin@fgps.com`
+- **Password**: `adminfgps`
 
 ---
 
