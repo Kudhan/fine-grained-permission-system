@@ -75,8 +75,9 @@ fine-grained-permission-system/
 cd backend
 # Create virtual environment
 python -m venv venv
-# Activate it (Windows)
-.\venv\Scripts\activate
+# Activate it:
+# Windows: .\venv\Scripts\activate
+# Unix/macOS: source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
