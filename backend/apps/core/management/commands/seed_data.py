@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"Created permission: {code}")
 
         # 2. Create Admin User
-        admin_email = "admin@saas.com"
+        admin_email = "admin@fgps.com"
         admin, created = User.objects.get_or_create(
             email=admin_email,
             defaults={
@@ -39,7 +39,7 @@ class Command(BaseCommand):
             }
         )
         if created:
-            admin.set_password("Admin123!")
+            admin.set_password("adminfgps")
             admin.save()
             self.stdout.write(f"Created admin user: {admin_email}")
         
